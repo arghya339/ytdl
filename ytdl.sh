@@ -53,8 +53,8 @@ Movies="$HOME/Movies/ytdl"
 Pictures="$HOME/Pictures/ytdl"
 mkdir -p "$Music" "$Movies" "$Pictures"  # Create directories if they don't exist
 
-if [ ! -f "$PREFIX/bin/ytdl" ]; then
-  ln -s $HOME/.ytdl.sh $PREFIX/bin/ytdl  # symlink (shortcut of .ytdl.sh)
+if [ ! -f "/usr/local/bin/ytdl" ]; then
+  ln -s $HOME/.ytdl.sh /usr/local/bin/ytdl  # symlink (shortcut of .ytdl.sh)
 fi
 chmod +x $HOME/.ytdl.sh  # give execute permission to ytdl
 
