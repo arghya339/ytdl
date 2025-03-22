@@ -666,6 +666,10 @@ dl() {
 if brew --version 2>&1 | grep "Homebrew" >/dev/null && python3 --version 2>&1 | grep -q 'Python ' && command -v yt-dlp >/dev/null 2>&1 && ffmpeg -version | grep -q "ffmpeg version" && magick --version 2>&1 | grep -q 'ImageMagick [0-9.]*-[0-9]*' && aria2c --version 2>&1 | grep -q 'aria2 version [0-9.]*' && jq --version 2>&1 | grep -q 'jq-[0-9.]*'; then
   # Please uncheck 'Resotre text when reopening windows' option in Terminal > Settings > Profiles > Window
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback  # \033[2J: Clears visible screen. # \033[3J: Clears scrollback buffer (macOS). # \033[H: Moves cursor to top-left.
+  if brew outdated 2>/dev/null | grep -q "^yt-dlp"; then
+    echo -e "$info yt-dlp update available, please select 'Up' to update.\n"
+    open "https://github.com/yt-dlp/yt-dlp/releases/"
+  fi
   while true; do
     print_ytdlp
     echo -e "Up. Update \nOp. Online Play \nDl. Download \nPl. Player \nRe. Reinstall \nUn. Uninstall \nQu. Quit \n"
