@@ -678,7 +678,7 @@ if brew --version 2>&1 | grep "Homebrew" >/dev/null && python3 --version 2>&1 | 
         case "$input" in
           [Uu][pp]*)
             curl -o "$HOME/.ytdl.sh" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/ytdl.sh" > /dev/null 2>&1
-            if [ -f "/usr/local/bin/brew" ];  then
+            if which brew > /dev/null 2>&1 && ! brew update 2>&1 | grep -q "Already up-to-date";  then
               echo -e "$running Updating Homebrew.."
               brew update > /dev/null 2>&1
             fi
