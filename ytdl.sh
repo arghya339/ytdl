@@ -567,7 +567,7 @@ dl() {
               yt-dlp -x --audio-format mp3 $items_args --audio-quality ${quality} --no-embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic \
                 $url -o "$Music/%(title)s.%(ext)s" 2>&1 | grep --line-buffered '\[download\]'
               crop_artwork
-          elif !(echo "$url" | grep -qE "/youtube.com|w.youtube.com|/youtu.be"); then
+          elif echo "$url" | grep -qE "/music.youtube.com"; then
             yt-dlp -x --audio-format mp3 $items_args --audio-quality ${quality} --embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url \
               -o "$Music/%(title)s.%(ext)s" 2>&1 | grep --line-buffered '\[download\]'  # --sponsorblock-remove all  # Remove all sponsor segments
           fi
