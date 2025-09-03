@@ -35,7 +35,7 @@ A feature-rich command-line Video/Audio Downloader for macOS, based on yt-dlp.
 
 ## Usage
 - Open macOS Terminal and run the script with the following command:
-```
+```sh
 curl -o "$HOME/.ytdl.sh" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/ytdl.sh" && bash "$HOME/.ytdl.sh"
 ```
 Run ytdl with these commands in Terminal:
