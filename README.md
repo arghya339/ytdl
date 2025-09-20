@@ -42,7 +42,10 @@ Run ytdl with these commands in Terminal:
 ```
 ytdl
 ```
+> [!TIP]
+> Please uncheck `Resotre text when reopening windows` option in Terminal > Settings > Profiles > Window
 
+> [!NOTE]
 > This script was tested on an Intel Mac running macOS Sonoma (14) with Terminal v2.14(453) with bash v3.2.57.
 
 <details><summary>

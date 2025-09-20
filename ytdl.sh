@@ -3,6 +3,13 @@
 # Enable extended glob patterns at the top of this script
 shopt -s extglob
 
+# --- Downloading latest ytdl.sh file from GitHub ---
+curl -sL -o "$HOME/.ytdl.sh" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/ytdl.sh"
+if [ ! -f "/usr/local/bin/ytdl" ]; then
+  ln -s $HOME/.ytdl.sh /usr/local/bin/ytdl  # symlink (shortcut of .ytdl.sh)
+fi
+chmod +x $HOME/.ytdl.sh  # give execute permission to ytdl
+
 # --- Define ANSI color codes ---
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
@@ -40,12 +47,6 @@ Cyan='\033[38;2;0;255;255m'
 DarkWhite='\033[37m'
 White='\033[97m'
 
-# --- Checking Internet Connection ---
-if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
-  echo -e "${RED}[x] Oops! No Internet Connection available. \nConnect to the Internet and try again later.${RESET}"
-  exit 1
-fi
-
 # --- Golobal variables ---
 fullScriptPath=$(realpath "$0")  # Get the full path of the currently running script
 Music="$HOME/Music/ytdl"
@@ -53,10 +54,11 @@ Movies="$HOME/Movies/ytdl"
 Pictures="$HOME/Pictures/ytdl"
 mkdir -p "$Music" "$Movies" "$Pictures"  # Create directories if they don't exist
 
-if [ ! -f "/usr/local/bin/ytdl" ]; then
-  ln -s $HOME/.ytdl.sh /usr/local/bin/ytdl  # symlink (shortcut of .ytdl.sh)
+# --- Checking Internet Connection ---
+if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
+  echo -e "${RED}[x] Oops! No Internet Connection available. \nConnect to the Internet and try again later.${RESET}"
+  exit 1
 fi
-chmod +x $HOME/.ytdl.sh  # give execute permission to ytdl
 
 # --- Construct the ytdlp shape using string concatenation (ANSI Big Money-se Font) ---
 print_ytdlp() {
@@ -76,164 +78,61 @@ print_ytdlp() {
   printf '\n'
 }
 
-# --- Check for dependencies ---
-check_dependencies() {
-  dependencies=("brew" "python3" "yt-dlp" "ffmpeg" "imagemagick" "aria2" "jq")
+# --- Check if brew is installed ---
+if brew --version >/dev/null 2>&1; then
+  brew update > /dev/null 2>&1
+else
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" > /dev/null 2>&1
+fi
+formulaeList=$(brew list 2>/dev/null)
+outdatedFormulae=$(brew outdated 2>/dev/null)
 
-  for dependency in "${dependencies[@]}"; do
-    installed=false
-    version=""
-    # Custom dependency checks
-    case "$dependency" in
-      # Check for Homebrew
-      "brew")
-        if brew --version >/dev/null 2>&1; then
-          installed=true
-          version=$(brew --version)
-          echo "${GREEN}[+] Homebrew is already installed (Version: ${version})."
-        fi
-        ;;
-      # Check for Python
-      "python3")
-        if python3 --version 2>&1 | grep -q 'Python '; then
-          installed=true
-          version=$(python3 --version 2>&1 | awk '{print $2}')
-          echo "${GREEN}[+] Python is already installed (Version: ${version})."
-        fi
-        ;;
-      # Check for yt-dlp
-      "yt-dlp")
-        if command -v yt-dlp >/dev/null 2>&1; then
-          installed=true
-          version=$(yt-dlp --version | grep -o '\d\+\.\d\+\.\d\+')
-          echo "${GREEN}[+] yt-dlp is already installed (Version: ${version})."
-        fi
-        ;;
-      # check for ffmpeg
-      "ffmpeg")
-        if command -v ffmpeg >/dev/null 2>&1; then
-          installed=true
-          version=$(ffmpeg -version | head -n 1 | awk '{print $3}' | cut -d'-' -f1)
-          echo "${GREEN}[+] ffmpeg is already installed (Version: ${version})."
-        fi
-        ;;
-      # Check for ImageMagick
-      "imagemagick")
-        if command -v magick >/dev/null 2>&1; then
-          installed=true
-          version=$(magick --version | grep -o 'ImageMagick [0-9.]*-[0-9]*')
-          echo "${GREEN}[+] ImageMagick is already installed (Version: ${version})."
-        fi
-        ;;
-      # check for aria2
-      "aria2")
-        if command -v aria2c >/dev/null 2>&1; then
-          installed=true
-          version=$(aria2c --version | grep -o 'aria2 version [0-9.]*')
-          echo "${GREEN}[+] aria2 is already installed (Version: ${version})."
-        fi
-        ;;
-      # Check for jq
-      "jq")
-        if command -v jq >/dev/null 2>&1; then
-          installed=true
-          version=$(jq --version | grep -o 'jq-[0-9.]*')
-          echo "${GREEN}[+] jq is already installed (Version: ${version})."
-        fi
-        ;;
-      # General executable check for unknown dependencies
-      *)
-        if command -v "$dependency" >/dev/null 2>&1; then
-          installed=true
-          echo "${GREEN}[+]${RESET} '$dependency' is already installed."
-        fi
-        ;;
-    esac
-
-    # If the dependency is not installed, attempt to install it
-    if ! "$installed"; then
-      echo "${YELLOW}[!]$RESET '$dependency' is not installed. Attempting to install..."
-      case "$dependency" in
-          "brew")
-              echo "${YELLOW}[!]$RESET Installing Homebrew..."
-              /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" > /dev/null 2>&1
-              ;;
-          "python3")
-              echo "${YELLOW}[!]$RESET Installing Python using Brew..."
-              brew install python@3.13 > /dev/null 2>&1
-              ;;
-          "yt-dlp")
-              echo "${YELLOW}[!]$RESET Installing yt-dlp using Brew..."
-              brew install yt-dlp > /dev/null 2>&1
-              ;;
-          "ffmpeg")
-              echo "${YELLOW}[!]$RESET Installing ffmpeg using Brew..."
-              brew install ffmpeg > /dev/null 2>&1
-              ;;
-          "imagemagick")
-              echo "${YELLOW}[!]$RESET Installing ImageMagick using Brew..."
-              brew install imagemagick > /dev/null 2>&1
-              ;;
-          "aria2")
-              echo "${YELLOW}[!]$RESET Installing aria2 using Brew..."
-              brew install aria2 > /dev/null 2>&1
-              ;;
-          "jq")
-              echo "${YELLOW}[!]$RESET Installing jq using Brew..."
-              brew install jq > /dev/null 2>&1
-              ;;
-      esac
-
-      # Recheck installation to verify success
-      installed=false
-      case "$dependency" in
-          "brew")
-            if brew --version >/dev/null 2>&1; then
-              installed=true
-            fi
-            ;;
-          "python3")
-            if python3 --version 2>&1 | grep -q 'Python '; then
-              installed=true
-            fi
-            ;;
-          "yt-dlp")
-            if command -v yt-dlp >/dev/null 2>&1; then
-              installed=true
-            fi
-            ;;
-          "ffmpeg")
-            if command -v ffmpeg >/dev/null 2>&1; then
-              installed=true
-            fi
-            ;;
-          "imagemagick")
-            if command -v magick >/dev/null 2>&1; then
-              installed=true
-            fi
-            ;;
-          "aria2")
-            if command -v aria2c >/dev/null 2>&1; then
-              installed=true
-            fi
-            ;;
-          "jq")
-            if command -v jq >/dev/null 2>&1; then
-              installed=true
-            fi
-            ;;
-      esac
-
-      if "$installed"; then
-        echo "${GREEN}[+]${RESET} '$dependency' installed and verified successfully."
-        else
-          echo "${RED}[x]${RESET} Installation verification failed for '$dependency'."
-          echo "${YELLOW}[!]$RESET Please install '$dependency' manually and re-run the script."
-          exit 1
-        fi
-    fi
-  done
+# --- formulae upgrade function ---
+formulaeUpdate() {
+  local formulae=$1
+  if echo "$outdatedFormulae" | grep -q "^$formulae" 2>/dev/null; then
+    echo -e "$running Upgrading $formulae formulae.."
+    brew upgrade "$formulae" > /dev/null 2>&1
+  fi
 }
+
+# --- formulae install function ---
+formulaeInstall() {
+  local formulae=$1
+  if ! echo "$formulaeList" | grep -q "$formulae" 2>/dev/null; then
+    echo -e "$running Installing $formulae formulae.."
+    brew install "$formulae" > /dev/null 2>&1
+  fi
+}
+
+# --- formulae reinstall function ---
+formulaeReinstall() {
+  local formulae=$1
+  if echo "$formulaeList" | grep -q "$formulae" 2>/dev/null; then
+    echo -e "$running Reinstalling $formulae formulae.."
+    brew reinstall "$formulae" > /dev/null 2>&1
+  fi
+}
+
+# --- formulae uninstall function ---
+formulaeUninstall() {
+  local formulae=$1
+  if echo "$formulaeList" | grep -q "$formulae" 2>/dev/null; then
+    echo -e "$running Uninstalling $formulae formulae.."
+    brew uninstall "$formulae" > /dev/null 2>&1
+  fi
+}
+
+# --- Install/Update dependencies ---
+formulaeUpdate "bash"  # bash update
+formulaeUpdate "grep"  # grep update
+formulaeUpdate "curl"  # curl update
+formulaeInstall "python3"  # python3 install/update
+formulaeInstall "yt-dlp"  # yt-dlp install/update
+formulaeInstall "ffmpeg"  # ffmpeg install/update
+formulaeInstall "imagemagick"  # imagemagick install/update
+formulaeInstall "aria2"  # aria2 install/update
+formulaeInstall "jq"  # jq install/update
 
 # --- Crop the thumbnail into a square for audio downloads from YouTube ---
 crop_artwork() {
@@ -663,141 +562,76 @@ dl() {
 }
 
 # --- ytdl main menu functions ---
-if brew --version 2>&1 | grep "Homebrew" >/dev/null && python3 --version 2>&1 | grep -q 'Python ' && command -v yt-dlp >/dev/null 2>&1 && ffmpeg -version | grep -q "ffmpeg version" && magick --version 2>&1 | grep -q 'ImageMagick [0-9.]*-[0-9]*' && aria2c --version 2>&1 | grep -q 'aria2 version [0-9.]*' && jq --version 2>&1 | grep -q 'jq-[0-9.]*'; then
-  # Please uncheck 'Resotre text when reopening windows' option in Terminal > Settings > Profiles > Window
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback  # \033[2J: Clears visible screen. # \033[3J: Clears scrollback buffer (macOS). # \033[H: Moves cursor to top-left.
-  if brew outdated 2>/dev/null | grep -q "^yt-dlp"; then
-    echo -e "$info yt-dlp update available, please select 'Up' to update.\n"
-    open "https://github.com/yt-dlp/yt-dlp/releases/"
-  fi
   while true; do
     print_ytdlp
-    echo -e "Up. Update \nOp. Online Play \nDl. Download \nPl. Player \nRe. Reinstall \nUn. Uninstall \nQu. Quit \n"
+    if echo "$outdatedFormulae" | grep -q "^yt-dlp" 2>/dev/null; then
+      echo -e "$info yt-dlp update available, please select 'Up' to update.\n"
+      open "https://github.com/yt-dlp/yt-dlp/releases/"
+    fi
+    echo -e "Up. Update \nOp. Online Play \nDl. Download \nPl. Player \nRe. Reinstall \nUn. Uninstall \nQu. Quit\n"
         read -r -p "Select: " input
         echo -e "\n"
         case "$input" in
           [Uu][pp]*)
-            curl -o "$HOME/.ytdl.sh" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/ytdl.sh" > /dev/null 2>&1
-            if which brew > /dev/null 2>&1 && ! brew update 2>&1 | grep -q "Already up-to-date";  then
-              echo -e "$running Updating Homebrew.."
-              brew update > /dev/null 2>&1
-            fi
-            if brew outdated 2>/dev/null | grep -q "^python@"; then
-              echo -e "$running Updating python.."
-              brew upgrade --formulae  python > /dev/null 2>&1
-            fi
-            if brew outdated 2>/dev/null | grep -q "^yt-dlp"; then
-              echo -e "$running Updating yt-dlp.."
-              brew upgrade --formulae yt-dlp > /dev/null 2>&1
-            fi
-            if brew outdated 2>/dev/null | grep -q "^ffmpeg"; then
-              echo -e "$running Updating ffmpeg.."
-              brew upgrade --formulae ffmpeg > /dev/null 2>&1
-            fi
-            if brew outdated 2>/dev/null | grep -q "^imagemagick"; then
-              echo -e "$running Updating ImageMagick.."
-              brew upgrade --formulae imagemagick > /dev/null 2>&1
-            fi
-            if brew outdated 2>/dev/null | grep -q "^aria2"; then
-              echo -e "$running Updating aria2.."
-              brew upgrade --formulae aria2 > /dev/null 2>&1
-            fi
-            if brew outdated 2>/dev/null | grep -q "^jq"; then
-              echo -e "$running Updating jq.."
-              brew upgrade --formulae jq > /dev/null 2>&1
-            fi
-            if brew list 2>/dev/null | grep -q "^vlc" && brew outdated 2>/dev/null | grep -q "vlc"; then
-              echo -e "$running Updating vlc.."
-              brew upgrade --cask vlc > /dev/null 2>&1
-            fi
-            if brew list 2>/dev/null | grep -q "^aural" && brew outdated 2>/dev/null | grep -q "aural"; then
-              echo -e "$running Updating aural.."
-              brew upgrade --cask aural > /dev/null 2>&1
-            fi
-            if brew list 2>/dev/null | grep -q "^freetube" && brew outdated 2>/dev/null | grep -q "freetube"; then
-              echo -e "$running Updating freetube.."
-              brew upgrade --cask freetube > /dev/null 2>&1
-            fi
-            if brew list 2>/dev/null | grep -q "^youtube-music" && brew outdated 2>/dev/null | grep -q "youtube-music"; then
-              echo -e "$running Updating youtube-music.."
-              brew upgrade --cask youtube-music > /dev/null 2>&1
-            fi
+            formulaeUpdate "python3"  # python3 update
+            formulaeUpdate "yt-dlp"  # yt-dlp update
+            formulaeUpdate "ffmpeg"  # ffmpeg update
+            formulaeUpdate "imagemagick"  # imagemagick update
+            formulaeUpdate "aria2"  # aria2 update
+            formulaeUpdate "jq"  # jq update
+            echo "$formulaeList" | grep -q "^vlc" 2>/dev/null && formulaeUpdate "vlc"  # vlc update
+            echo "$formulaeList" | grep -q "^aural" 2>/dev/null && formulaeUpdate "aural"  # aural update
+            echo "$formulaeList" | grep -q "^freetube" 2>/dev/null && formulaeUpdate "freetube"  # freetube update
+            echo "$formulaeList" | grep -q "^youtube-music" 2>/dev/null && formulaeUpdate "youtube-music"  # youtube-music update
             sleep 1  # wait 1 second
             ;;
           [Oo][Pp]*)
             echo -e "$running Installing Online Player..."
-            brew install freetube > /dev/null 2>&1  # install freetube for online YT video playback
-            brew install th-ch/youtube-music/youtube-music > /dev/null 2>&1  # install youtube-music for online YT Music audio playback
+            if ! echo "$formulaeList" | grep -q "freetube" 2>/dev/null && brew install freetube > /dev/null 2>&1  # install freetube for online YT video playback
+            if ! echo "$formulaeList" | grep -q "youtube-music" 2>/dev/null && brew install th-ch/youtube-music/youtube-music > /dev/null 2>&1  # install youtube-music for online YT Music audio playback
             ;;
           [Dd][Ll]*)
             dl  # Call the download function
             ;;
           [Pp][Ll]*)
             ehco -e "$running Installing Player..."
-            brew install vlc > /dev/null 2>&1  # install vlc player for video playback
-            brew install aural > /dev/null 2>&1  # install aural player for audio playback
+            if echo "$formulaeList" | grep -q "vlc" 2>/dev/null || brew install vlc > /dev/null 2>&1  # install vlc player for video playback
+            if echo "$formulaeList" | grep -q "aural" 2>/dev/null || brew install aural > /dev/null 2>&1  # install aural player for audio playback
             ;;
           [Rr][ee]*)
-            echo -e "$running Reinstalling Python..."
-            brew reinstall python > /dev/null 2>&1
-            echo -e "$running Reinstalling yt-dlp..."
-            brew uninstall yt-dlp > /dev/null 2>&1
-            #rm /usr/local/bin/yt-dlp
-            brew install yt-dlp > /dev/null 2>&1
-            brew link yt-dlp > /dev/null 2>&1
-            echo -e "$running Reinstalling ffmpeg..."
-            brew reinstall ffmpeg > /dev/null 2>&1
-            echo -e "$running Reinstalling ImageMagick..."
-            brew reinstall imagemagick > /dev/null 2>&1
-            echo -e "$running Reinstalling aria2..."
-            brew reinstall aria2 > /dev/null 2>&1
-            echo -e "$running Reinstalling jq..."
-            brew reinstall jq > /dev/null 2>&1
+            formulaeReinstall "python3"  # python3 reinstall
+            formulaeReinstall "yt-dlp"  # yt-dlp reinstall
+            formulaeReinstall "ffmpeg"  # ffmpeg reinstall
+            formulaeReinstall "imagemagick"  # imagemagick reinstall
+            formulaeReinstall "aria2"  # aria2 reinstall
+            formulaeReinstall "jq"  # jq reinstall
             sleep 1  # wait 1 second
             ;;
           [Uu][Nn]*)
             # Prompt for user choice on uinstallation of python and yt-dlp
-            echo "${YELLOW}Do you want to uninstall python and yt-dlp? [Y/n]${RESET}"
+            echo "${YELLOW}Do you want to uninstall ytdl? [Y/n]${RESET}"
             read -r -p "Select: " opt
             case $opt in
               y*|Y*)
-                echo -e "$running Uninstalling python.."
-                brew uninstall --ignore-dependencies python > /dev/null 2>&1
-                echo -e "$running Uninstalling yt-dlp.."
-                brew uninstall yt-dlp > /dev/null 2>&1
-                echo -e "$running Uninstalling ffmpeg.."
-                brew uninstall ffmpeg > /dev/null 2>&1
-                echo -e "$running Uninstalling ImageMagick.."
-                brew uninstall imagemagick > /dev/null 2>&1
-                echo -e "$running Uninstalling aria2.."
-                brew uninstall aria2 > /dev/null 2>&1
-                echo -e "$running Uninstalling jq.."
-                brew uninstall jq > /dev/null 2>&1
-                if brew list 2>/dev/null | grep -q "^vlc"; then
-                  echo -e "$running Uninstalling vlc.."
-                  brew uninstall vlc > /dev/null 2>&1
-                fi
-                if brew list 2>/dev/null | grep -q "^aural"; then
-                  echo -e "$running Uninstalling aural.."
-                  brew uninstall aural > /dev/null 2>&1
-                fi
-                if brew list 2>/dev/null | grep -q "^freetube"; then
-                  echo -e "$running Uninstalling freetube.."
-                  brew uninstall freetube > /dev/null 2>&1
-                fi
-                if brew list 2>/dev/null | grep -q "^youtube-music"; then
-                  echo -e "$running Uninstalling youtube-music.."
-                  brew uninstall youtube-music > /dev/null 2>&1
-                fi
-                #rm /usr/local/bin/ytdl
-                #rm $HOME/ytdl.sh              
+                formulaeUninstall "python3"  # python3 uninstall
+                formulaeUninstall "yt-dlp"  # yt-dlp uninstall
+                formulaeUninstall "ffmpeg"  # ffmpeg runinstall
+                formulaeUninstall "imagemagick"  # imagemagick uninstall
+                formulaeUninstall "aria2"  # aria2 uninstall
+                formulaeUninstall "jq"  # jq uninstall
+                formulaeUninstall "vlc"  # vlc uninstall
+                formulaeUninstall "aural"  # aural uninstall
+                formulaeUninstall "freetube"  # freetube uninstall
+                formulaeUninstall "youtube-music"  # youtube-music uninstall
+                rm -f "$HOME/.ytdl.sh"; rm -f /usr/local/bin/ytdl           
                 ;;
-              n*|N*) echo -e "$notice yt-dlp uninstall skipped.";sleep 1 ;;
+              n*|N*) echo -e "$notice ytdl uninstall skipped.";sleep 1 ;;
               *) echo -e "$info Invalid choice. ytdl uninstall skipped."; sleep 2 ;;
             esac
             ;;
           [Qq]*)
-            echo -e "$info Exiting.."
+            echo "Script exited !!"
             sleep 0.5  # wait 500 milliseconds
             printf '\033[2J\033[3J\033[H'  # clear Terminal
             break  # Break out of the loop
@@ -811,14 +645,4 @@ if brew --version 2>&1 | grep "Homebrew" >/dev/null && python3 --version 2>&1 | 
         printf '\033[2J\033[3J\033[H' # clear Terminal
         echo  # Add empty line for spacing before next prompt
   done
-else
-  print_ytdlp  # Print the ytdlp shape
-  check_dependencies  # Check for dependencies
-  echo "${GREEN}✨ Powered by yt-dlp (github.com/yt-dlp/yt-dlp)"
-  open "https://github.com/yt-dlp/yt-dlp"
-  sleep 3  # wait 3 seconds
-  printf '\033[2J\033[3J\033[H'  # clear previous session
-  bash $fullScriptPath  # run script again
-  exit 1
-fi
 ##########################################
