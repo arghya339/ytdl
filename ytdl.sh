@@ -127,7 +127,7 @@ formulaeUninstall() {
 formulaeUpdate "bash"  # bash update
 formulaeUpdate "grep"  # grep update
 formulaeUpdate "curl"  # curl update
-formulaeInstall "python3"  # python3 install/update
+formulaeInstall "python"  # python install/update
 formulaeInstall "yt-dlp"  # yt-dlp install/update
 formulaeInstall "ffmpeg"  # ffmpeg install/update
 formulaeInstall "imagemagick"  # imagemagick install/update
@@ -574,7 +574,7 @@ dl() {
         echo -e "\n"
         case "$input" in
           [Uu][pp]*)
-            formulaeUpdate "python3"  # python3 update
+            formulaeUpdate "python"  # python update
             formulaeUpdate "yt-dlp"  # yt-dlp update
             formulaeUpdate "ffmpeg"  # ffmpeg update
             formulaeUpdate "imagemagick"  # imagemagick update
@@ -600,7 +600,7 @@ dl() {
             echo "$formulaeList" | grep -q "aural" 2>/dev/null || brew install aural > /dev/null 2>&1  # install aural player for audio playback
             ;;
           [Rr][ee]*)
-            formulaeReinstall "python3"  # python3 reinstall
+            formulaeReinstall "python"  # python reinstall
             formulaeReinstall "yt-dlp"  # yt-dlp reinstall
             formulaeReinstall "ffmpeg"  # ffmpeg reinstall
             formulaeReinstall "imagemagick"  # imagemagick reinstall
@@ -614,7 +614,7 @@ dl() {
             read -r -p "Select: " opt
             case $opt in
               y*|Y*)
-                formulaeUninstall "python3"  # python3 uninstall
+                formulaeUninstall "python"  # python uninstall
                 formulaeUninstall "yt-dlp"  # yt-dlp uninstall
                 formulaeUninstall "ffmpeg"  # ffmpeg runinstall
                 formulaeUninstall "imagemagick"  # imagemagick uninstall
