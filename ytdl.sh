@@ -588,16 +588,16 @@ dl() {
             ;;
           [Oo][Pp]*)
             echo -e "$running Installing Online Player..."
-            if ! echo "$formulaeList" | grep -q "freetube" 2>/dev/null && brew install freetube > /dev/null 2>&1  # install freetube for online YT video playback
-            if ! echo "$formulaeList" | grep -q "youtube-music" 2>/dev/null && brew install th-ch/youtube-music/youtube-music > /dev/null 2>&1  # install youtube-music for online YT Music audio playback
+            echo "$formulaeList" | grep -q "freetube" 2>/dev/null || brew install freetube > /dev/null 2>&1  # install freetube for online YT video playback
+            echo "$formulaeList" | grep -q "youtube-music" 2>/dev/null || brew install th-ch/youtube-music/youtube-music > /dev/null 2>&1  # install youtube-music for online YT Music audio playback
             ;;
           [Dd][Ll]*)
             dl  # Call the download function
             ;;
           [Pp][Ll]*)
             ehco -e "$running Installing Player..."
-            if echo "$formulaeList" | grep -q "vlc" 2>/dev/null || brew install vlc > /dev/null 2>&1  # install vlc player for video playback
-            if echo "$formulaeList" | grep -q "aural" 2>/dev/null || brew install aural > /dev/null 2>&1  # install aural player for audio playback
+            echo "$formulaeList" | grep -q "vlc" 2>/dev/null || brew install vlc > /dev/null 2>&1  # install vlc player for video playback
+            echo "$formulaeList" | grep -q "aural" 2>/dev/null || brew install aural > /dev/null 2>&1  # install aural player for audio playback
             ;;
           [Rr][ee]*)
             formulaeReinstall "python3"  # python3 reinstall
