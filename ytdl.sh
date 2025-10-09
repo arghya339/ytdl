@@ -620,8 +620,7 @@ menu() {
   show_menu() {
     printf '\033[2J\033[3J\033[H'
     print_ytdlp  # call print_ytdlp function
-    echo "Navigate with [↑] [↓] [←] [→]"
-    echo -e "Select with [↵]\n"
+    echo -e "Navigate with [↑] [↓] [←] [→] || Select with [↵]\n"
     for ((i=0; i<=$((${#menu_options[@]} - 1)); i++)); do
       if [ $i -eq $selected_option ]; then
         echo -e "${whiteBG}➤ ${menu_options[$i]} $Reset"
