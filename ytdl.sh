@@ -610,18 +610,84 @@ dl() {
   done
 }
 
+menu() {
+  local -n menu_options=$1
+  local -n menu_buttons=$2
+  
+  selected_option=0
+  selected_button=0
+  
+  show_menu() {
+    printf '\033[2J\033[3J\033[H'
+    print_ytdlp  # call print_ytdlp function
+    echo "Navigate with [↑] [↓] [←] [→]"
+    echo -e "Select with [↵]\n"
+    for ((i=0; i<=$((${#menu_options[@]} - 1)); i++)); do
+      if [ $i -eq $selected_option ]; then
+        echo -e "${whiteBG}➤ ${menu_options[$i]} $Reset"
+      else
+        [ $(($i + 1)) -le 9 ] && echo " $(($i + 1)). ${menu_options[$i]}" || echo "$(($i + 1)). ${menu_options[$i]}"
+      fi
+    done
+    echo
+    for ((i=0; i<=$((${#menu_buttons[@]} - 1)); i++)); do
+      if [ $i -eq $selected_button ]; then
+        [ $i -eq 0 ] && echo -ne "${whiteBG}➤ ${menu_buttons[$i]} $Reset" || echo -ne "  ${whiteBG}➤ ${menu_buttons[$i]} $Reset"
+      else
+        [ $i -eq 0 ] && echo -n "  ${menu_buttons[$i]}" || echo -n "   ${menu_buttons[$i]}"
+      fi
+    done
+    echo
+  }
+
+  printf '\033[?25l'
+  while true; do
+    show_menu
+    read -rsn1 key
+    case $key in
+      $'\E')  # ESC
+        # /bin/bash -c 'read -r -p "Type any ESC key: " input && printf "You Entered: %q\n" "$input"'  # q=safelyQuoted
+        read -rsn2 -t 0.1 key2
+        case "$key2" in
+          '[A')  # Up arrow
+            selected_option=$((selected_option - 1))
+            [ $selected_option -lt 0 ] && selected_option=$((${#menu_options[@]} - 1))
+            ;;
+          '[B')  # Down arrow
+            selected_option=$((selected_option + 1))
+            [ $selected_option -ge ${#menu_options[@]} ] && selected_option=0
+            ;;
+          '[C')  # Right arrow
+            [ $selected_button -lt $((${#menu_buttons[@]} - 1)) ] && selected_button=$((selected_button + 1))
+            ;;
+          '[D')  # Left arrow
+            [ $selected_button -gt 0 ] && selected_button=$((selected_button - 1))
+            ;;
+        esac
+        ;;
+      '')  # Enter key
+        break
+        ;;
+      [0-9])
+        selected_option=$(($key - 1))
+       ;;
+    esac
+  done
+  printf '\033[?25h'
+
+  [ $selected_button -eq 0 ] && { printf '\033[2J\033[3J\033[H'; selected=$selected_option; }
+  [ $selected_button -eq $((${#menu_buttons[@]} - 1)) ] && { printf '\033[2J\033[3J\033[H'; echo "Script exited !!"; exit 0; }
+}
+
 # --- ytdl main menu functions ---
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback  # \033[2J: Clears visible screen. # \033[3J: Clears scrollback buffer (macOS). # \033[H: Moves cursor to top-left.
   while true; do
-    print_ytdlp
     if echo "$outdatedFormulae" | grep -q "^yt-dlp" 2>/dev/null; then
       echo -e "$info yt-dlp update available, please select 'Up' to update.\n"
       open "https://github.com/yt-dlp/yt-dlp/releases/"
     fi
-    echo -e "Up. Update \nOp. Online Play \nDl. Download \nPl. Player \nRe. Reinstall \nUn. Uninstall \nQu. Quit\n"
-        read -r -p "Select: " input
-        echo -e "\n"
-        case "$input" in
+    options=(Update Online\ Play Download Player Reinstall Uninstall); buttons=("<Select>" "<Exit>"); menu "options" "buttons"
+        case "${options[$selected]}" in
           [Uu][pp]*)
             formulaeUpdate "python"  # python update
             formulaeUpdate "yt-dlp"  # yt-dlp update
@@ -677,19 +743,6 @@ dl() {
               n*|N*) echo -e "$notice ytdl uninstall skipped!";sleep 1 ;;
             esac
             ;;
-          [Qq]*)
-            echo "Script exited !!"
-            sleep 0.5  # wait 500 milliseconds
-            printf '\033[2J\033[3J\033[H'  # clear Terminal
-            break  # Break out of the loop
-            ;;
-          *)
-            echo -e "$info Invalid input! Please enter: Up / Op / Dl / Pl / Re / Un / Qu"
-            sleep 6  # wait 6 seconds (1 seconds = 1000 milliseconds)
-            printf '\033[2J\033[3J\033[H'
-            ;;
         esac
-        printf '\033[2J\033[3J\033[H' # clear Terminal
-        echo  # Add empty line for spacing before next prompt
   done
 ##########################################
