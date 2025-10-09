@@ -696,7 +696,7 @@ menu() {
     fi
     options=("Update" "Online Play" "Download" "Player" "Reinstall" "Uninstall"); buttons=("<Select>" "<Exit>"); menu "options" "buttons"
         case "${options[$selected]}" in
-          [Uu][pp]*)
+          Update)
             formulaeUpdate "python"  # python update
             formulaeUpdate "yt-dlp"  # yt-dlp update
             formulaeUpdate "ffmpeg"  # ffmpeg update
@@ -709,20 +709,20 @@ menu() {
             echo "$formulaeList" | grep -q "^youtube-music" 2>/dev/null && formulaeUpdate "youtube-music"  # youtube-music update
             sleep 1  # wait 1 second
             ;;
-          [Oo][Pp]*)
+          Online\ Play)
             echo -e "$running Installing Online Player..."
             echo "$formulaeList" | grep -q "freetube" 2>/dev/null || brew install freetube > /dev/null 2>&1  # install freetube for online YT video playback
             echo "$formulaeList" | grep -q "youtube-music" 2>/dev/null || brew install th-ch/youtube-music/youtube-music > /dev/null 2>&1  # install youtube-music for online YT Music audio playback
             ;;
-          [Dd][Ll]*)
+          Download)
             dl  # Call the download function
             ;;
-          [Pp][Ll]*)
+          Player)
             ehco -e "$running Installing Player..."
             echo "$formulaeList" | grep -q "vlc" 2>/dev/null || brew install vlc > /dev/null 2>&1  # install vlc player for video playback
             echo "$formulaeList" | grep -q "aural" 2>/dev/null || brew install aural > /dev/null 2>&1  # install aural player for audio playback
             ;;
-          [Rr][ee]*)
+          Reinstall)
             formulaeReinstall "python"  # python reinstall
             formulaeReinstall "yt-dlp"  # yt-dlp reinstall
             formulaeReinstall "ffmpeg"  # ffmpeg reinstall
@@ -731,7 +731,7 @@ menu() {
             formulaeReinstall "jq"  # jq reinstall
             sleep 1  # wait 1 second
             ;;
-          [Uu][Nn]*)
+          Uninstall)
             # Prompt for user choice on uinstallation of python and yt-dlp
             buttons=("<Yes>" "<No>"); confirmPrompt "Do you want to uninstall ytdl?" "buttons" "1" && opt=Yes || opt=No
             case $opt in
