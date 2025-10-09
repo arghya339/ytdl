@@ -694,7 +694,7 @@ menu() {
       echo -e "$info An update for yt-dlp is available! Please select 'Update' to proceed."
       open "https://github.com/yt-dlp/yt-dlp/releases/"
     fi
-    options=(Update Online\ Play Download Player Reinstall Uninstall); buttons=("<Select>" "<Exit>"); menu "options" "buttons"
+    options=("Update" "Online Play" "Download" "Player" "Reinstall" "Uninstall"); buttons=("<Select>" "<Exit>"); menu "options" "buttons"
         case "${options[$selected]}" in
           [Uu][pp]*)
             formulaeUpdate "python"  # python update
