@@ -691,7 +691,7 @@ menu() {
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback  # \033[2J: Clears visible screen. # \033[3J: Clears scrollback buffer (macOS). # \033[H: Moves cursor to top-left.
   while true; do
     if echo "$outdatedFormulae" | grep -q "^yt-dlp" 2>/dev/null; then
-      echo -e "$info yt-dlp update available, please select 'Up' to update.\n"
+      echo -e "$info An update for yt-dlp is available! Please select 'Update' to proceed."
       open "https://github.com/yt-dlp/yt-dlp/releases/"
     fi
     options=(Update Online\ Play Download Player Reinstall Uninstall); buttons=("<Select>" "<Exit>"); menu "options" "buttons"
