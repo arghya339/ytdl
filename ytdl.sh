@@ -294,7 +294,7 @@ dl() {
     fi
     echo -e "\n"
     echo -e "$running Fetching URLs metadata...\n"
-    if echo "$url 2>&1" | grep -qF "playlist"; then
+    if echo "$url 2>&1" | grep -qF "list"; then
       total=$(yt-dlp --flat-playlist --get-title "$url" 2>/dev/null | awk 'END{print NR}')
       echo -e "$info The entered URLs contain a playlist with a total of $total videos.\n"
       buttons=("<Entire>" "<Select>"); confirmPrompt "Download Entire playlist or Select videos?" "buttons" && choice=Entire || choice=Select
