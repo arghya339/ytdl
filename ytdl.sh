@@ -75,7 +75,7 @@ print_ytdlp() {
   printf "${Red} |  \__| \$\$          ${Reset}      ${White}      \\$\$\$\$\$\$${Reset}${Red}             | \$\$       ${Reset}\n"
   printf "${Red}  \\$\$    \$\$           𝒟𝑒𝓋𝑒𝓁𝑜𝓅𝑒𝓇: @𝒶𝓇𝑔𝒽𝓎𝒶𝟥𝟥𝟫 ${Reset} ${White} ${Reset}  ${Red}     | \$\$       ${Reset}\n"
   printf "${Red}   \\$\$\$\$\$\$      https://github.com/arghya339/ytdl ${Reset}  ${White}  ${Reset}${Red}\\\$\$  ${Reset}\n"
-  #printf '\n'
+  printf '\n'
   #printf '\n'
 }
 
