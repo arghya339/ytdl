@@ -46,6 +46,7 @@ DarkCyan='\033[36m'
 Cyan='\033[38;2;0;255;255m'
 DarkWhite='\033[37m'
 White='\033[97m'
+whiteBG="\e[47m\e[30m"
 
 # --- Golobal variables ---
 fullScriptPath=$(realpath "$0")  # Get the full path of the currently running script
