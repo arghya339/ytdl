@@ -52,13 +52,13 @@ ytdl
 Alternative
 </summary>
 
-Android:
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 
 [Seal](https://github.com/JunkFood02/Seal)
 
 [ytdlnis](https://github.com/deniscerri/ytdlnis)
 
-macOS:
+![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
 
 [MacYTDL](https://github.com/section83/MacYTDL/releases) formatSlectionNotAvailable
 
@@ -68,11 +68,11 @@ macOS:
 
 [ezytdl](https://github.com/sylviiu/ezytdl) notWorkOnMac
 
-Windows:
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 
 [yt-dlp-gui](https://github.com/dsymbol/yt-dlp-gui)
 
-Linux:
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 
 [yt-dlp-gui](https://github.com/dsymbol/yt-dlp-gui)
 </details>
