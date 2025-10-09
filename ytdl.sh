@@ -678,6 +678,7 @@ menu() {
           # otherwise select option that match with $key
           selected_option=$(($key - 1))
         fi
+        show_menu; sleep 0.5; break
        ;;
     esac
   done
