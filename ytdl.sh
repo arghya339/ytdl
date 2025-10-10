@@ -614,7 +614,7 @@ menu() {
   local -n menu_options=$1
   local -n menu_buttons=$2
   
-  selected_option=0
+  selected_option=2  # Select Download by default
   selected_button=0
   
   show_menu() {
