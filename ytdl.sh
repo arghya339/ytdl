@@ -670,13 +670,13 @@ menu() {
       [0-9])
         if [ $key -eq 0 ]; then
           # if $key is 0, then select last option
-          selected_option=$((${#options[@]} - 1))
-        elif [ $key -gt ${#options[@]} ]; then
+          selected_option=$((${#menu_options[@]} - 1))
+        elif [ $key -gt ${#menu_options[@]} ]; then
           # if $key is greaterthen total option, then select first option
           selected_option=0
         else
           # otherwise select option that match with $key
-          selected_option=$(($key - 1))
+          selected_option=$((key - 1))
         fi
         show_menu; sleep 0.5; break
        ;;
