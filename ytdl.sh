@@ -616,12 +616,11 @@ menu() {
   
   selected_option=2  # Select Download by default
   selected_button=0
-  
+  count=0
   show_menu() {
     printf '\033[2J\033[3J\033[H'
-    if echo "$outdatedFormulae" | grep -q "^yt-dlp" 2>/dev/null; then
-      echo -e "$info An update for yt-dlp is available! Please select 'Update' to proceed."
-      open "https://github.com/yt-dlp/yt-dlp/releases/"
+    if [ $count -eq 0 ]; then
+      echo "$outdatedFormulae" | grep -q "^yt-dlp" 2>/dev/null && { echo -e "$info An update for yt-dlp is available! Please select 'Update' to proceed."; open "https://github.com/yt-dlp/yt-dlp/releases/"; }
     fi
     print_ytdlp  # call print_ytdlp function
     echo -e "Navigate with [↑] [↓] [←] [→] || Select with [↵]\n"
@@ -640,6 +639,7 @@ menu() {
         [ $i -eq 0 ] && echo -n "  ${menu_buttons[$i]}" || echo -n "   ${menu_buttons[$i]}"
       fi
     done
+    ((count++))
   }
 
   printf '\033[?25l'
