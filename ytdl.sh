@@ -457,7 +457,7 @@ dl() {
         # Attempt to download 1440p with preferred codecs (MKV)
         if yt-dlp -F $url | grep -q -E '1440p'; then
           yt-dlp -f 'bestvideo[height=1440]+bestaudio[ext=webm]' --extractor-args "youtube:player-client=android,web" $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor \
-            --external-downloader aria2c --external-downloader-args "-x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0 --ca-certificate=/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')  # Use aria2c as downloader instead of the default (curl)
+            --external-downloader aria2c --external-downloader-args "-x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" --ca-certificate="/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')  # Use aria2c as downloader instead of the default (curl)
           EXIT_CODE=$?
           if [ "$EXIT_CODE" -ne 0 ]; then
             echo "${YELLOW}[!]$RESET Failed to download 1440p MKV. Falling back to default quality (bestvideo+bestaudio MKV)."
@@ -475,7 +475,7 @@ dl() {
         # Attempt to download 2160p with preferred codecs (MKV)
         if yt-dlp -F $url | grep -q -E '2160p'; then
           yt-dlp -f 'bestvideo[height=2160]+bestaudio[ext=webm]' --extractor-args "youtube:player-client=android,web" $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor \
-            --external-downloader aria2c --external-downloader-args "-x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0 --ca-certificate=/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')
+            --external-downloader aria2c --external-downloader-args "-x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" --ca-certificate="/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')
           EXIT_CODE=$?
           if [ "$EXIT_CODE" -ne 0 ]; then
             echo "${YELLOW}[!]$RESET Failed to download 2160p MKV. Falling back to default quality (bestvideo+bestaudio MKV)."
@@ -493,7 +493,7 @@ dl() {
         # Attempt to download 4320p with preferred codecs (MKV)
         if yt-dlp -F $url | grep -q -E '4320p'; then
           yt-dlp -f 'bestvideo[height<=4320]+bestaudio[ext=webm]' --extractor-args "youtube:player-client=android,web" $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor \
-            --external-downloader aria2c --external-downloader-args "-x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0 --ca-certificate=/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')
+            --external-downloader aria2c --external-downloader-args "-x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" --ca-certificate="/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')
           EXIT_CODE=$?
           if [ "$EXIT_CODE" -ne 0 ]; then
             echo "${YELLOW}[!]$RESET Failed to download 4320p MKV. Falling back to default quality (bestvideo+bestaudio MKV)."
