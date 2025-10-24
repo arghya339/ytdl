@@ -133,7 +133,25 @@ formulaeInstall "yt-dlp"  # yt-dlp install/update
 formulaeInstall "ffmpeg"  # ffmpeg install/update
 formulaeInstall "imagemagick"  # imagemagick install/update
 formulaeInstall "aria2"  # aria2 install/update
+formulaeInstall "ca-certificate"  # ca-certificate update
 formulaeInstall "jq"  # jq install/update
+
+# https://github.com/aria2/aria2/issues/1920
+  [ $(uname -m) == "x86_64" ] && Arch=amd64 || Arch=arm64
+  aria2Executing=$(aria2c -q -d "$HOME" -o aria2Executing -U "User-Agent: $USER_AGENT" -U "Referer: https://one.one.one.one/" --ca-certificate="/etc/ssl/cert.pem" --async-dns=true --async-dns-server="$cloudflareIP" "https://one.one.one.one/")
+  if echo "$aria2Executing" | grep -q "--async-dns=true" 2>/dev/null; then
+    curl -L --progress-bar -C - -o $HOME/Downloads/aria2c-macos-$Arch.tar https://github.com/tofuliang/aria2/releases/download/20240919/aria2c-macos-$Arch.tar
+    pv "$HOME/Downloads/aria2c-macos-$Arch.tar" | tar -xf - -C "$HOME/Downloads" && rm -f "$HOME/Downloads/aria2c-macos-$Arch.tar"
+    sudo mv $HOME/Downloads/aria2c /usr/local/bin/aria2c
+    if aria2c -v &>/dev/null; then
+      aria2c -v | head -1 | awk '{print $3}'
+    else
+      sudo xattr -d com.apple.quarantine /usr/local/bin/aria2c && aria2c -v | head -1 | awk '{print $3}'
+    fi
+    rm -f ~/aria2Executing
+  else
+    rm -f ~/aria2Executing
+  fi
 
 # --- Crop the thumbnail into a square for audio downloads from YouTube ---
 crop_artwork() {
@@ -439,7 +457,7 @@ dl() {
         # Attempt to download 1440p with preferred codecs (MKV)
         if yt-dlp -F $url | grep -q -E '1440p'; then
           yt-dlp -f 'bestvideo[height=1440]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor \
-            --external-downloader aria2c --external-downloader-args "-x 16 -k 1M" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')  # Use aria2c as downloader instead of the default (curl)
+            --external-downloader aria2c --external-downloader-args "-x 16 -k 1M" --ca-certificate="/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')  # Use aria2c as downloader instead of the default (curl)
           EXIT_CODE=$?
           if [ "$EXIT_CODE" -ne 0 ]; then
             echo "${YELLOW}[!]$RESET Failed to download 1440p MKV. Falling back to default quality (bestvideo+bestaudio MKV)."
@@ -457,7 +475,7 @@ dl() {
         # Attempt to download 2160p with preferred codecs (MKV)
         if yt-dlp -F $url | grep -q -E '2160p'; then
           yt-dlp -f 'bestvideo[height=2160]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor \
-            --external-downloader aria2c --external-downloader-args "-x 16 -k 1M" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')
+            --external-downloader aria2c --external-downloader-args "-x 16 -k 1M" --ca-certificate="/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')
           EXIT_CODE=$?
           if [ "$EXIT_CODE" -ne 0 ]; then
             echo "${YELLOW}[!]$RESET Failed to download 2160p MKV. Falling back to default quality (bestvideo+bestaudio MKV)."
@@ -475,7 +493,7 @@ dl() {
         # Attempt to download 4320p with preferred codecs (MKV)
         if yt-dlp -F $url | grep -q -E '4320p'; then
           yt-dlp -f 'bestvideo[height<=4320]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor \
-            --external-downloader aria2c --external-downloader-args "-x 16 -k 1M" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')
+            --external-downloader aria2c --external-downloader-args "-x 16 -k 1M" --ca-certificate="/etc/ssl/cert.pem" "$url" -o "$Movies/%(title)s.%(ext)s" 2>&1 | tee >(grep --line-buffered '\[download\]')
           EXIT_CODE=$?
           if [ "$EXIT_CODE" -ne 0 ]; then
             echo "${YELLOW}[!]$RESET Failed to download 4320p MKV. Falling back to default quality (bestvideo+bestaudio MKV)."
@@ -610,13 +628,13 @@ dl() {
   done
 }
 
+count=0
 menu() {
   local -n menu_options=$1
   local -n menu_buttons=$2
   
   selected_option=2  # Select Download by default
   selected_button=0
-  count=0
   show_menu() {
     printf '\033[2J\033[3J\033[H'
     if [ $count -eq 0 ]; then
@@ -702,6 +720,7 @@ menu() {
             formulaeUpdate "ffmpeg"  # ffmpeg update
             formulaeUpdate "imagemagick"  # imagemagick update
             formulaeUpdate "aria2"  # aria2 update
+            formulaeUpdate "ca-certificate"  # ca-certificate update
             formulaeUpdate "jq"  # jq update
             echo "$formulaeList" | grep -q "^vlc" 2>/dev/null && formulaeUpdate "vlc"  # vlc update
             echo "$formulaeList" | grep -q "^aural" 2>/dev/null && formulaeUpdate "aural"  # aural update
