@@ -166,19 +166,93 @@ playlistNameAsAlbumMetadata() {
   fi
 } 
 
-videoUrlData() {
+audioFormatExtraction() {
+  mapfile -t audioOnly < <(grep -E "audio only" <<< "$urlInfo")
+  audioFormatsList=(); AIDs=(); AEXTs=(); CHs=(); AFILESIZEs=(); ACODECs=(); ABRs=(); ASRs=(); LANGUAGEs=(); AQUALITYs=()
+  for ((i=$((${#audioOnly[@]}-1)); i>=0; i--)); do
+    #echo "$((${#audioOnly[@]}-i)). ${audioOnly[i]}"
+    j=$((${#audioOnly[@]}-1-i))
+    audioFormat="${audioOnly[i]}"
+    AIDs+=($(awk '{print $1}' <<< "$audioFormat"))
+    AEXTs+=($(awk '{print $2}' <<< "$audioFormat"))
+    CHs+=($(awk '{print $5}' <<< "$audioFormat"))
+    AFILESIZEs+=($(awk '{print $7}' <<< "$audioFormat"))
+    ACODECs+=($(awk '{print $13}' <<< "$audioFormat"))
+    ABRs+=($(awk '{print $14}' <<< "$audioFormat"))
+    ASRs+=($(awk '{print $15}' <<< "$audioFormat"))
+    Language=$(awk '{print $16}' <<< "$audioFormat")
+    LANGUAGEs+=(${Language//[\[\]]/})
+    AQuality=$(awk '{print $17}' <<< "$audioFormat")
+    AQUALITYs+=(${AQuality%,})
+    audioFormatsList+=("ID:${AIDs[j]}|EXT:${AEXTs[j]}|CH:${CHs[j]}|SIZE:${AFILESIZEs[j]}|ACODEC:${ACODECs[j]}|ABR:${ABRs[j]}|ASR:${ASRs[j]}|LANG:${LANGUAGEs[j]}|QUALITY:${AQUALITYs[j]}")
+  done
+  if menu audioFormatsList bButtons; then
+    audioFormatList="${audioFormatsList[selected]}"
+    AID="${AIDs[selected]}"
+    ABR="${ABRs[selected]}"
+  fi
+}
+
+
+URLData() {
   urlInfo=$(yt-dlp --js-runtimes deno --remote-components ejs:github -F "$url" -q 2>&1)
   if echo "$urlInfo" | grep -qF "ERROR"; then
-    echo -e "$bad ${Red}Failed to fetch video data !!${Reset}"
+    echo -e "$bad ${Red}Failed to fetch URL data !!${Reset}"
     bash $fullScriptPath
     exit 1
   fi
-  echo "$urlInfo" | head -1
-  echo -e "\n\nvideo only:"
-  grep -E "video only" <<< "$urlInfo"
-  echo -e "\n\naudio only:"
-  grep -E "audio only" <<< "$urlInfo"
-  echo -e "\n\n$info VideoQuality | ABR | VID+AID: (AV01 video + MP4A audio) / (VP09 video + Opus audio) | images: (PNG/JPG/WEBP/GIF)\n"
+  #echo "$urlInfo" | head -1
+  #echo -e "\n\nvideo only:"
+  #grep -E "video only" <<< "$urlInfo"
+  #echo -e "\n\naudio only:"
+  #grep -E "audio only" <<< "$urlInfo"
+  #echo -e "\n\n$info VideoQuality | ABR | VID+AID: (AV01 video + MP4A audio) / (VP09 video + Opus audio) | images: (PNG/JPG/WEBP/GIF)\n"
+  downloadOptions=(Video Audio Images)
+  if menu downloadOptions bButtons; then
+    downloadOption="${downloadOptions[selected]}"
+    if [ "$downloadOption" == "Video" ]; then
+      mapfile -t videoOnly < <(grep -E "video only" <<< "$urlInfo")
+      formatsList=(); IDs=(); EXTs=(); RESOLUTIONs=(); FPSs=(); FILESIZEs=(); VCODECs=(); VBRs=(); QUALITYs=()
+      for ((i=$((${#videoOnly[@]}-1)); i>=0; i--)); do
+        #echo "$((${#videoOnly[@]}-i)). ${videoOnly[i]}"
+        j=$((${#videoOnly[@]}-1-i))
+        Format="${videoOnly[i]}"
+        IDs+=($(awk '{print $1}' <<< "$Format"))
+        EXTs+=($(awk '{print $2}' <<< "$Format"))
+        RESOLUTIONs+=($(awk '{print $3}' <<< "$Format"))
+        FPSs+=($(awk '{print $4}' <<< "$Format"))
+        FILESIZEs+=($(awk '{print $6}' <<< "$Format"))
+        VCODECs+=($(awk '{print $10}' <<< "$Format"))
+        VBRs+=($(awk '{print $11}' <<< "$Format"))
+        Quality=$(awk '{print $14}' <<< "$Format")
+        QUALITYs+=(${Quality%,})
+        formatsList+=("ID:${IDs[j]}|EXT:${EXTs[j]}|RES:${RESOLUTIONs[j]}|FPS:${FPSs[j]}|SIZE:${FILESIZEs[j]}|CODEC:${VCODECs[j]}|VBR:${VBRs[j]}|QUALITY:${QUALITYs[j]}")
+      done
+      if menu formatsList bButtons; then
+        formatList="${formatsList[selected]}"
+        ID="${IDs[selected]}"
+        QUALITY="${QUALITYs[selected]}"
+      fi
+      audioFormatExtraction
+      if [ -n "$formatList" ] && [ -n "$audioFormatList" ]; then
+        echo -e "Selected video only: $formatList\nSelected audio only: $audioFormatList"
+        format="$ID+$AID"
+      elif [ -n "$formatList" ]; then
+        echo "Selected video format: $formatList"
+        format="$QUALITY"
+      elif [ -n "$audioFormatList" ]; then
+        echo "Selected audio only: $audioFormatList"
+        format="$ABR"
+      else
+        format="bestvideo"
+      fi
+    elif [ "$downloadOption" == "Audio" ]; then
+      audioFormatExtraction
+      [ -n "$audioFormatList" ] && { echo "Selected audio only: $audioFormatList"; format="$ABR"; } || format="bestaudio"
+    else
+      format="images"
+    fi
+  fi
 }
 
 dl() {
@@ -197,124 +271,44 @@ dl() {
             yt-dlp --js-runtimes deno --remote-components ejs:github --flat-playlist --get-title "$url" 2> >(grep -v 'Incomplete data received\|Falling back on generic' >&2) | nl -s ") " -w 2
             echo -e "\n\n$info Enter video numbers (e.g.: 1,3,5 or 2-5 or 1,4-6)"
             read -r -p "Select items: " playlist_items
-            echo -e "$info List of Playlist videos with Quality: \n\n"
-            yt-dlp --js-runtimes deno --remote-components ejs:github -F "$url" --playlist-items "$playlist_items"
+            echo -e "$info List of Playlist videos with Format: \n\n"
+            yt-dlp --js-runtimes deno --remote-components ejs:github -F "$url" --playlist-items "$playlist_items" -q
         else
             ehco -e "\n\n$notice Entire playlist selected !!"
         fi
-      echo -e "\n\n$info Playlist Quality: png|svg|gif|mp3|4320p|1440p|2160p|1080p|720p|480p|360p|240p|144p\n"
+      echo -e "\n\n$info Playlist Format: png|svg|gif|mp3|4320p|1440p|2160p|1080p|720p|480p|360p|240p|144p\n"
+      read -r -p "Select Format: " format
+      echo -e "\n\n"
     else
       echo -e "\n\n"
-      videoUrlData
+      URLData
     fi
     [ -n "$playlist_items" ] && items_args="--playlist-items $playlist_items" || items_args=""
   while true; do
-    read -r -p "Select Quaility: " quality
-    echo -e "\n\n"
-    case "$quality" in
-      144*)
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '144p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=144]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          if [ $? -ne 0 ]; then
-            cat $ytdl/ytdlp_error_log.txt
-            echo -e "$notice ${Yellow}Failed to download 144p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          fi
-          playlistNameAsAlbumMetadata
+    case "$format" in
+      [Bb][Ee][Ss][Tt][Vv][Ii][Dd][Ee][Oo])
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -qE 'video'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          [ $? -ne 0 ] && { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP4!${Reset}"; }
           echo; read -p "Press Enter to continue..."
           break
         else
-          echo -e "$notice 144p Quality unavailable !!"
+          echo -e "$notice Video unavailable !!"
         fi
         ;;
-      240*)
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '240p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=240]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+      4320* | 8[Kk] | [Ff][Uu][Hh][Dd])
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '4320p'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height<=4320]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
-            echo -e "$notice ${Yellow}Failed to download 240p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          fi
-          playlistNameAsAlbumMetadata
-          echo; read -p "Press Enter to continue..."
-          break
-        else
-          echo -e "$notice 240p Quality unavailable !!"
-        fi
-        ;;
-      360*)
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '360p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=360]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          if [ $? -ne 0 ]; then
-            cat $ytdl/ytdlp_error_log.txt
-            echo -e "$notice ${Yellow}Failed to download 360p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          fi
-          playlistNameAsAlbumMetadata
-          echo; read -p "Press Enter to continue..."
-          break
-        else
-          echo -e "$notice 360p Quality unavailable !!"
-        fi
-        ;;
-      480* | [Ss][Dd])
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '480p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=480]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          if [ $? -ne 0 ]; then
-            cat $ytdl/ytdlp_error_log.txt
-            echo -e "$notice ${Yellow}Failed to download 480p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          fi
-          playlistNameAsAlbumMetadata
-          echo; read -p "Press Enter to continue..."
-          break
-        else
-          echo -e "$notice SD Quality unavailable !!"
-        fi
-        ;;
-      720* | [Hh][Dd] | [Mm][Pp]4 | [Vv][Ii][Dd][Ee][Oo])
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '720p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=720]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          if [ $? -ne 0 ]; then
-            cat $ytdl/ytdlp_error_log.txt
-            echo -e "$notice ${Yellow}Failed to download 720p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          fi
-          playlistNameAsAlbumMetadata
-          echo; read -p "Press Enter to continue..."
-          break
-        else
-          echo -e "$notice HD Quality unavailable !!"
-        fi
-        ;;
-      1080* | [Ff][Hh][Dd])
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '1080p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=1080]+bestaudio[ext=m4a]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          if [ $? -ne 0 ]; then
-            cat $ytdl/ytdlp_error_log.txt
-            echo -e "${Yellow}Failed to download 1080p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          fi
-          playlistNameAsAlbumMetadata
-          echo; read -p "Press Enter to continue..."
-          break
-        else
-          echo -e "$notice Full HD Quality unavailable !!"
-        fi
-        ;;
-      1440* | 2[Kk] | [Qq][Hh][Dd] | [Mm][Kk][Vv])
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '1440p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=1440]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-          if [ $? -ne 0 ]; then
-            cat $ytdl/ytdlp_error_log.txt
-            echo -e "$notice ${Yellow}Failed to download 1440p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
+            echo -e "${Yellow}Failed to download 4320p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
             yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
           break
         else
-          echo -e "$notice 2k Quality unavailable !!"
+          echo -e "$notice 8k Quality unavailable !!"
         fi
         ;;
       2160* | 4[Kk] | [Uu][Hh][Dd])
@@ -332,29 +326,119 @@ dl() {
           echo -e "$notice 4k Quality unavailable !!"
         fi
         ;;
-      4320* | 8[Kk])
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '4320p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height<=4320]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+      1440* | 2[Kk] | [Qq][Hh][Dd])
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '1440p'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=1440]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
-            echo -e "${Yellow}Failed to download 4320p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
+            echo -e "$notice ${Yellow}Failed to download 1440p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
             yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
           break
         else
-          echo -e "$notice 8k Quality unavailable !!"
+          echo -e "$notice 2k Quality unavailable !!"
         fi
         ;;
-       [Mm][Pp]3 | [Aa][Uu][Dd][Ii][Oo] | [Mm][Uu][Ss][Ii][Cc])
+      1080* | [Ff][Hh][Dd])
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '1080p'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=1080]+bestaudio[ext=m4a]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          if [ $? -ne 0 ]; then
+            cat $ytdl/ytdlp_error_log.txt
+            echo -e "${Yellow}Failed to download 1080p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          fi
+          playlistNameAsAlbumMetadata
+          echo; read -p "Press Enter to continue..."
+          break
+        else
+          echo -e "$notice FHD Quality unavailable !!"
+        fi
+        ;;
+      720* | [Hh][Dd])
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '720p'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=720]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          if [ $? -ne 0 ]; then
+            cat $ytdl/ytdlp_error_log.txt
+            echo -e "$notice ${Yellow}Failed to download 720p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          fi
+          playlistNameAsAlbumMetadata
+          echo; read -p "Press Enter to continue..."
+          break
+        else
+          echo -e "$notice HD Quality unavailable !!"
+        fi
+        ;;
+      480* | [Ss][Dd])
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '480p'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=480]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          if [ $? -ne 0 ]; then
+            cat $ytdl/ytdlp_error_log.txt
+            echo -e "$notice ${Yellow}Failed to download 480p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          fi
+          playlistNameAsAlbumMetadata
+          echo; read -p "Press Enter to continue..."
+          break
+        else
+          echo -e "$notice SD Quality unavailable !!"
+        fi
+        ;;
+      360*)
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '360p'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=360]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          if [ $? -ne 0 ]; then
+            cat $ytdl/ytdlp_error_log.txt
+            echo -e "$notice ${Yellow}Failed to download 360p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          fi
+          playlistNameAsAlbumMetadata
+          echo; read -p "Press Enter to continue..."
+          break
+        else
+          echo -e "$notice 360p Quality unavailable !!"
+        fi
+        ;;
+      240*)
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '240p'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=240]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          if [ $? -ne 0 ]; then
+            cat $ytdl/ytdlp_error_log.txt
+            echo -e "$notice ${Yellow}Failed to download 240p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          fi
+          playlistNameAsAlbumMetadata
+          echo; read -p "Press Enter to continue..."
+          break
+        else
+          echo -e "$notice 240p Quality unavailable !!"
+        fi
+        ;;
+      144*)
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '144p'; then
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=144]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          if [ $? -ne 0 ]; then
+            cat $ytdl/ytdlp_error_log.txt
+            echo -e "$notice ${Yellow}Failed to download 144p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          fi
+          playlistNameAsAlbumMetadata
+          echo; read -p "Press Enter to continue..."
+          break
+        else
+          echo -e "$notice 144p Quality unavailable !!"
+        fi
+        ;;
+      [Bb][Ee][Ss][Tt][Aa][Uu][Dd][Ii][Oo])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E 'Default'; then
           if grep -qE "/youtube.com|w.youtube.com|/youtu.be" <<< "$url"; then
               yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --no-embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format srt --convert-subs srt --sponsorblock-remove music_offtopic "$url" -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-              [ $? -eq 0 ] && crop_artwork || cat $ytdl/ytdlp_error_log.txt
+              [ $? -eq 0 ] && crop_artwork || { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP3 from YouTube!${Reset}"; }
           else
             yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format srt --convert-subs srt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt  # sponsorblock categories: sponsor, intro, outro, selfpromo, preview, filler, interaction, music_offtopic, hook, poi_highlight, chapter, all (default)
-            [ $? -ne 0 ] && cat $ytdl/ytdlp_error_log.txt
+            [ $? -ne 0 ] && { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP3 from YT Music!${Reset}"; }
           fi
           echo; read -p "Press Enter to continue..."
           break
@@ -363,36 +447,36 @@ dl() {
         fi
         ;;
       *[Kk])
-        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E 'medium|low'; then
+        if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -qE "$format"; then
           if grep -qE "/youtube.com|w.youtube.com|/youtu.be" <<< "$url"; then
-              yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --audio-quality ${quality} --no-embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
-              [ $? -eq 0 ] && crop_artwork || cat $ytdl/ytdlp_error_log.txt
+              yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --audio-quality ${format} --no-embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+              [ $? -eq 0 ] && crop_artwork || { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP3 from YouTube!${Reset}"; }
           elif grep -qE "/music.youtube.com" <<< "$url"; then
-            yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --audio-quality ${quality} --embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt  # --sponsorblock-remove all  # Remove all sponsor segments
-            [ $? -ne 0 ] && cat $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --audio-quality ${format} --embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt  # --sponsorblock-remove all  # Remove all sponsor segments
+            [ $? -ne 0 ] && { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP3 from YT Music!${Reset}"; }
           fi
           echo; read -p "Press Enter to continue..."
           break
         else
-          echo -e "$notice Selected Audio Quality unavailable !!"
+          echo -e "$notice Selected Audio Format $format unavailable !!"
         fi
         ;;
       +([0-9])'+'+([0-9]) )
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f "$quality" $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f "$format" $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
-            echo -e "$notice ${Yellow}Failed to download Selected formate code (MKV)!${Reset}"
+            echo -e "$notice ${Yellow}Failed to download Selected formate code $format in MKV!${Reset}"
           else
             playlistNameAsAlbumMetadata
             echo; read -p "Press Enter to continue..."
             break
           fi
         ;;
-      [Pp][Nn][Gg] | [Jj][Pp][Gg] | [Jj][Pp][Ee][Gg] | [Ii][Mm][Aa][Gg][Ee][Ss] | [Pp][Hh][Oo][Tt][Oo][Ss] | [Pp][Ii][Cc][Tt][Uu][Rr][Ee][Ss] | [Gg][Ii][Ff])
+      [Pp][Nn][Gg] | [Jj][Pp][Gg] | [Jj][Pp][Ee][Gg] | [Ww][Ee][Bb][Pp] | [Gg][Ii][Ff] | [Ii][Mm][Aa][Gg][Ee][Ss])
         yt-dlp --js-runtimes deno --remote-components ejs:github --skip-download --write-thumbnail --convert-thumbnails png "$url" -o "$Pictures/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
         if [ $? -ne 0 ]; then
           cat $ytdl/ytdlp_error_log.txt
-          echo -e "$notice ${Yellow}Failed to download Images as PNG! Falling back to default format (JPG).${Reset}"
+          echo -e "$notice ${Yellow}Failed to download Images as PNG! Falling back to JPG format.${Reset}"
           yt-dlp --js-runtimes deno --remote-components ejs:github --skip-download --write-thumbnail --convert-thumbnails jpg "$url" -o "$Pictures/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
@@ -424,11 +508,11 @@ dl() {
         printf '\033[2J\033[3J\033[H'
         print_ytdlp
         if grep -qF "playlist" <<< "$url"; then
-          echo -e "$info List of Playlist videos with Quality: \n\n"
+          echo -e "$info List of Playlist videos with Format: \n\n"
           yt-dlp --js-runtimes deno --remote-components ejs:github -F "$url" --playlist-items "$playlist_items"
-          echo -e "\n\n$info Playlist Quality: mp3|4320p|1440p|2160p|1080p|720p|480p|360p|240p|144p\n"
+          echo -e "\n\n$info Playlist Format: mp3|4320p|1440p|2160p|1080p|720p|480p|360p|240p|144p\n"
         else
-          videoUrlData
+          URLData
         fi
         ;;
     esac
