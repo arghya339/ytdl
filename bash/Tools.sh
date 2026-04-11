@@ -17,3 +17,20 @@ MP42MKV() {
   fileNameWOExt=${fileName%.*}
   ffmpeg -y -v quiet -i "$filePath" -c copy -map 0 "$Movies/Convert/$fileNameWOExt.mkv"
 }
+
+Video2MP3() {
+  filePath=${1}
+  mkdir -p $Music/Convert
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -v quiet -i "$filePath" -map a -c:a libmp3lame -q:a 0 "$Music/Convert/$fileNameWOExt.mp3"
+}
+
+Video2M4A() {
+  filePath=${1}
+  mkdir -p $Music/Convert
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -v quiet -i "$filePath" -vn -c:a aac -q:a 192k "$Music/Convert/$fileNameWOExt.m4a"
+  #mv "$Music/Convert/$fileNameWOExt.m4a" "$Music/Convert/$fileNameWOExt.m4r"  # for iPhone
+}

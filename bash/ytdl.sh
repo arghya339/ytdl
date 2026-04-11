@@ -565,6 +565,23 @@ while true; do
               esac
             done
             ;;
+          "Video→Audio")
+            v2a=("MKV→MP3" "MP4→MP3" "MKV→M4A" "MP4→M4A")
+            selected_v2a=0
+            while true; do
+              menu v2a bButtons "" "" $selected_v2a && selected_v2a=$selected || break
+              case "${v2a[selected_v2a]}" in
+                "MKV→MP3"|"MP4→MP3")
+                  [ "${v2a[selected_v2a]}" == "MKV→MP3" ] && video_ext=mkv || video_ext=mp4
+                  fileSelector "$video_ext" && Video2MP3 "$filePath"
+                  ;;
+                "MKV→M4A"|"MP4→M4A")
+                  [ "${v2a[selected_v2a]}" == "MKV→M4A" ] && video_ext=mkv || video_ext=mp4
+                  fileSelector "$video_ext" && Video2M4A "$filePath"
+                  ;;
+              esac
+            done
+            ;;
         esac
       done
       ;;
