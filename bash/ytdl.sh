@@ -549,7 +549,7 @@ while true; do
       ;;
     Download) dl ;;
     Tools)
-      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio→Audio" "Audio→Ringtone" "Images→Images" "Animations" "Documents" "Cipher")
+      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio→Audio" "Audio→Ringtone" "Audio→Images" "Images→Images" "Animations" "Documents" "Cipher")
       selected_tool=0
       while true; do
         menu tools bButtons "" "" $selected_tool && selected_tool=$selected || break
@@ -642,6 +642,20 @@ while true; do
                   fi
                   ;;
               esac
+            done
+            ;;
+          "Audio→Images")
+            a2i=("MP3→JPG" "M4A→JPG")
+            selected_a2i=0
+            while true; do
+              menu a2i bButtons "" "" $selected_a2i && selected_a2i=$selected || break
+              [ "${a2i[selected_a2i]}" == "MP3→JPG" ] && fileSelector mp3 || fileSelector m4a
+              if [ -f "$filePath" ]; then
+                mkdir -p $Pictures/Convert
+                fileName=$(basename "$filePath")
+                fileNameWOExt=${fileName%.*}
+                ffmpeg -y -v quiet -i "$filePath" -map 0:v:0 -c copy "$Pictures/Convert/$fileNameWOExt.jpg"
+              fi
             done
             ;;
           "Images→Images")
