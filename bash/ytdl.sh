@@ -65,11 +65,12 @@ eButtons=("<Select>" "<Exit>")
 bButtons=("<Select>" "<Back>")
 ynButtons=("<Yes>" "<No>")
 tfButtons=("<true>" "<false>")
+buttonsSymbol="➤"; symbol0="[ ]"; symbol1="[*]"
 [ $isMacOS == true ] && cert="--ca-certificate=/etc/ssl/cert.pem" || cert=
 
 [ $isAndroid == true ] && scripts=(Termux)
 [ $isMacOS == true ] && scripts=(macOS)
-scripts+=(menu confirmPrompt)
+scripts+=(Tools fileSelector menu confirmPrompt)
 
 run() {
   if [ $isAndroid == true ]; then
@@ -88,7 +89,7 @@ run() {
 checkInternet &>/dev/null && remoteVersion=$(curl -sL "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/bash/.version") || remoteVersion="$localVersion"
 updates() {
   curl -sL -o "$ytdl/.version" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/bash/.version"
-  curl -sL -o "$ytdl/CHANGELOG.md" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/bash/CHANGELOG.md"
+  #curl -sL -o "$ytdl/CHANGELOG.md" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/bash/CHANGELOG.md"
   curl -sL -o "$HOME/.ytdl.sh" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/bash/ytdl.sh"
   if [ $isAndroid == true ]; then
     [ ! -f "$PREFIX/bin/ytdl" ] && ln -s ~/.ytdl.sh $PREFIX/bin/ytdl
@@ -96,10 +97,12 @@ updates() {
     [ ! -f "/usr/local/bin/ytdl" ] && ln -s $HOME/.ytdl.sh /usr/local/bin/ytdl
   fi
   [ ! -x $HOME/.ytdl.sh ] && chmod +x $HOME/.ytdl.sh
-  curl -sL -o $ytdl/menu.sh https://raw.githubusercontent.com/arghya339/Simplify/refs/heads/next/bash/menu.sh
-  curl -sL -o $ytdl/confirmPrompt.sh https://raw.githubusercontent.com/arghya339/Simplify/refs/heads/next/bash/confirmPrompt.sh
-  curl -sL -o "$ytdl/${scripts[0]}.sh" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/bash/${scripts[0]}.sh"
   for ((c=0; c<${#scripts[@]}; c++)); do
+    if [ $c -le 2 ]; then
+      curl -sL -o "$ytdl/${scripts[c]}.sh" "https://raw.githubusercontent.com/arghya339/ytdl/refs/heads/main/bash/${scripts[c]}.sh"
+    else
+      curl -sL -o "$ytdl/${scripts[c]}.sh" "https://raw.githubusercontent.com/arghya339/Simplify/refs/heads/next/bash/${scripts[c]}.sh"
+    fi
     source $ytdl/${scripts[c]}.sh
   done
 }
@@ -522,7 +525,7 @@ dl() {
 printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback  # \033[2J: Clears visible screen. # \033[3J: Clears scrollback buffer (macOS). # \033[H: Moves cursor to top-left.
 input=2
 while true; do
-  options=("Update" "Online Play" "Download" "Player" "Reinstall" "Uninstall")
+  options=("Update" "Online Play" "Download" "Tools" "Player" "Reinstall" "Uninstall")
   menu "options" "eButtons" "" "" "$input" && input="$selected"
   case "${options[input]}" in
     Update)
@@ -545,6 +548,26 @@ while true; do
       fi
       ;;
     Download) dl ;;
+    Tools)
+      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio→Ringtone" "Images→Images" "Animations" "Documents" "Cipher")
+      selected_tool=0
+      while true; do
+        menu tools bButtons "" "" $selected_tool && selected_tool=$selected || break
+        case "${tools[selected_tool]}" in
+          "Video→Video")
+            v2v=("MKV→MP4" "MP4→MKV")
+            selected_v2v=0
+            while true; do
+              menu v2v bButtons "" "" $selected_v2v && selected_v2v=$selected || break
+              case "${v2v[selected_v2v]}" in
+                "MKV→MP4") fileSelector "mkv" && MKV2MP4 "$filePath" ;;
+                "MP4→MKV") fileSelector "mp4" && MP42MKV "$filePath" ;;
+              esac
+            done
+            ;;
+        esac
+      done
+      ;;
     Player)
       if [ $isMacOS == true ]; then
         ehco -e "$running Installing Player..."
