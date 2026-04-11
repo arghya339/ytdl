@@ -210,6 +210,7 @@ fileSelector() {
                 fileName="$selectedItemName"
                 [[ "${currentPath: -1}" != "/" ]] && filePath="$currentPath/$selectedItemName" || filePath="$currentPath${selectedItemName}"
                 ffprobe -hide_banner "$filePath" 2>&1 | grep -Ev "codec parameters|Unsupported codec|Consider increasing"
+                #ffprobe -v quiet -print_format json -show_format -show_streams "$filePath" | jq
                 confirmPrompt "Do you want to proceed with this video?" "ynButtons" && response=Yes || release=No
                 if [ "$response" == "Yes" ]; then
                   echo "filePath: $filePath"
