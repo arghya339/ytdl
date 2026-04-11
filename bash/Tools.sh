@@ -34,3 +34,22 @@ Video2M4A() {
   ffmpeg -y -v quiet -i "$filePath" -vn -c:a aac -q:a 192k "$Music/Convert/$fileNameWOExt.m4a"
   #mv "$Music/Convert/$fileNameWOExt.m4a" "$Music/Convert/$fileNameWOExt.m4r"  # for iPhone
 }
+
+Video2MP3Ringtone() {
+  filePath=${1}
+  start_time=$2
+  mkdir -p $Music/Ringtone
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -vn -c:a libmp3lame -q:a 0 "$Music/Ringtone/$fileNameWOExt.mp3"
+}
+
+Video2M4ARingtone() {
+  filePath=${1}
+  start_time=$2
+  mkdir -p $Music/Ringtone
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -vn -c:a aac -b:a 192k "$Music/Ringtone/$fileNameWOExt.m4a"
+  #mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
+}

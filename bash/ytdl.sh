@@ -582,6 +582,29 @@ while true; do
               esac
             done
             ;;
+          "Video→Ringtone")
+            v2r=("MKV→MP3Ringtone" "MP4→MP3Ringtone" "MKV→M4ARingtone" "MP4→M4ARingtone")
+            selected_v2r=0
+            while true; do
+              menu v2r bButtons "" "" $selected_v2r && selected_v2r=$selected || break
+              case "${v2r[selected_v2r]}" in
+                "MKV→MP3Ringtone"|"MP4→MP3Ringtone")
+                  [ "${v2r[selected_v2r]}" == "MKV→MP3Ringtone" ] && video_ext=mkv || video_ext=mp4
+                  if fileSelector $video_ext; then
+                    read -r -p "StartTime: " -i "00:00" -e start_time
+                    [ -n "$start_time" ] && Video2MP3Ringtone "$filePath" "$start_time"
+                  fi
+                  ;;
+                "MKV→M4ARingtone"|"MP4→M4ARingtone")
+                  [ "${v2r[selected_v2r]}" == "MKV→M4ARingtone" ] && video_ext=mkv || video_ext=mp4
+                  if fileSelector $video_ext; then
+                    read -r -p "StartTime: " -i "00:00" -e start_time
+                    [ -n "$start_time" ] && Video2M4ARingtone "$filePath" "$start_time"
+                  fi
+                  ;;
+              esac
+            done
+            ;;
         esac
       done
       ;;
