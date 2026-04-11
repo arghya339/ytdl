@@ -276,6 +276,17 @@ fileSelector() {
                 echo -e "$notice Invalid file type! You must select an zip archive (*.zip)."
                 echo; read -p "Press Enter to continue..."
               fi
+            else
+              [[ "${currentPath: -1}" != "/" ]] && filePath="$currentPath/$selectedItemName" || filePath="$currentPath${selectedItemName}"
+              confirmPrompt "Do you want to proceed with this file?" "ynButtons" && response=Yes || release=No
+              if [ "$response" == "Yes" ]; then
+                echo "filePath: $filePath"
+                printf '\033[?25h'
+                return 0
+                break
+              else
+                unset filePath
+              fi
             fi
           fi
         elif [ $selectedButton -eq 1 ]; then

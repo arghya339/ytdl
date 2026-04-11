@@ -549,7 +549,7 @@ while true; do
       ;;
     Download) dl ;;
     Tools)
-      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio→Audio" "Audio→Ringtone" "Audio→Images" "Images→Images" "Animations" "Documents" "Cipher")
+      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio→Audio" "Audio→Ringtone" "Audio→Images" "Images→Images" "Animations" "PDF")
       selected_tool=0
       while true; do
         menu tools bButtons "" "" $selected_tool && selected_tool=$selected || break
@@ -672,6 +672,45 @@ while true; do
                 "JPG→PNG") images_ext=jpg CONVERT2=png ;;
               esac
               fileSelector $images_ext && Images2Images "$filePath" "$CONVERT2"
+            done
+            ;;
+          "PDF")
+            if ! qpdf --version &>/dev/null; then
+              if [ $isAndroid == true ]; then
+                pkgInstall qpdf
+              elif [ $isMacOS == true ]; then
+                formulaeInstall qpdf
+              fi
+            fi
+            opt=("Encrypt" "Decrypt" "Images→PDF" "PDF→Images")
+            selected_opt=0
+            while true; do
+              menu opt bButtons "" "" $selected_opt && selected_opt=$selected || break
+              if [ "${opt[selected_opt]}" == "Encrypt" ]; then
+                if fileSelector pdf; then
+                  filePathWOExt=${filePath%.*}
+                  file_ext=${filePath##*.}
+                  read -r -p "Password: " -i "ABCD1234" -e password
+                  [ -n "$password" ] && qpdf --encrypt $password $password 256 -- "$filePath" "${filePathWOExt}_locked.$file_ext"
+                fi
+              elif [ "${opt[selected_opt]}" == "Decrypt" ]; then
+                if fileSelector pdf; then
+                  filePathWOExt=${filePath%.*}
+                  file_ext=${filePath##*.}
+                  read -r -p "Password: " -i "ABCD1234" -e password
+                  [ -n "$password" ] && qpdf --password=$password --decrypt "$filePath" "${filePathWOExt}_unlocked.$file_ext"
+                fi
+              elif [ "${opt[selected_opt]}"  == "Images→PDF" ]; then
+                if fileSelector jpg; then
+                  filePathWOExt=${filePath%.*}
+                  magick "$filePath" -page A4 -format pdf "$filePathWOExt.pdf"
+                fi
+              elif [ "${opt[selected_opt]}"  == "PDF→Images" ]; then
+                if fileSelector pdf; then
+                  filePathWOExt=${filePath%.*}
+                  magick "$filePath" "${filePathWOExt}%d.jpg"
+                fi
+              fi
             done
             ;;
         esac
