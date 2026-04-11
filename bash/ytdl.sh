@@ -644,6 +644,22 @@ while true; do
               esac
             done
             ;;
+          "Images→Images")
+            i2i=("WEBP→PNG" "WEBP→JPG" "PNG→WEBP" "PNG→JPG" "JPG→WEBP" "JPG→PNG")
+            selected_i2i=0
+            while true; do
+              menu i2i bButtons "" "" $selected_i2i && selected_i2i=$selected || break
+              case "${i2i[selected_i2i]}" in
+                "WEBP→PNG") images_ext=webp CONVERT2=png ;;
+                "WEBP→JPG") images_ext=webp CONVERT2=jpg ;;
+                "PNG→WEBP") images_ext=png CONVERT2=webp ;;
+                "PNG→JPG") images_ext=png CONVERT2=jpg ;;
+                "JPG→WEBP") images_ext=jpg CONVERT2=webp ;;
+                "JPG→PNG") images_ext=jpg CONVERT2=png ;;
+              esac
+              fileSelector $images_ext && Images2Images "$filePath" "$CONVERT2"
+            done
+            ;;
         esac
       done
       ;;

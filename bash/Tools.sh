@@ -100,3 +100,15 @@ MP32M4ARingtone() {
   ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -c aac -b:a 192k "$Music/Ringtone/$fileNameWOExt.m4a"
   #mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
 }
+
+Images2Images() {
+  filePath=${1}
+  CONVERT2=$2
+  mkdir -p $Pictures/Convert
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  case "$CONVERT2" in
+    jpg|jpeg) ffmpeg -y -v quiet -i "$filePath" -q:v 1 "$Pictures/Convert/$fileNameWOExt.$CONVERT2" ;;
+    *) ffmpeg -y -v quiet -i "$filePath" -lossless 1 "$Pictures/Convert/$fileNameWOExt.$CONVERT2" ;;
+  esac
+}
