@@ -112,3 +112,21 @@ Images2Images() {
     *) ffmpeg -y -v quiet -i "$filePath" -lossless 1 "$Pictures/Convert/$fileNameWOExt.$CONVERT2" ;;
   esac
 }
+
+Video2GIF() {
+  filePath=${1}
+  start_time=$2
+  mkdir -p $Pictures/Convert
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -hide_banner -loglevel error -ss $start_time -t 3 -i "$filePath" -map 0:v:0 -vf "fps=10,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=single[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3" "$Pictures/Convert/$fileNameWOExt.gif"
+}
+
+GIF2Video() {
+  filePath=${1}
+  CONVERT2=$2
+  mkdir -p $Movies/Convert
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  [ "$CONVERT2" == "mp4" ] && ffmpeg -y -v quiet -i "$filePath" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "$Movies/Convert/$fileNameWOExt.mp4" || ffmpeg -y -v quiet -i "$filePath" -c:v libx264 -crf 20 -pix_fmt yuv420p "$Movies/Convert/$fileNameWOExt.mkv"
+}

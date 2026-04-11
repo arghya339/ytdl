@@ -674,6 +674,26 @@ while true; do
               fileSelector $images_ext && Images2Images "$filePath" "$CONVERT2"
             done
             ;;
+          "Animations")
+            opts=("MKV→GIF" "MP4→GIF" "GIF→MP4" "GIF→MKV")
+            selected_opts=0
+            while true; do
+              menu opts bButtons "" "" $selected_opts && selected_opts=$selected || break
+              case "${opts[selected_opts]}" in
+                "MKV→GIF"|"MP4→GIF")
+                  [ "${opts[selected_opts]}" == "MKV→GIF" ] && video_ext=mkv || video_ext=mp4
+                  if fileSelector $video_ext; then
+                    read -r -p "StartTime: " -i "00:00" -e start_time
+                    [ -n "$start_time" ] && Video2GIF "$filePath" "$start_time"
+                  fi
+                  ;;
+                "GIF→MP4"|"GIF→MKV")
+                  [ "${opts[selected_opts]}" == "GIF→MP4" ] && CONVERT2=mp4 || CONVERT2=mkv
+                  fileSelector gif && GIF2Video "$filePath" "$CONVERT2"
+                  ;;
+              esac
+            done
+            ;;
           "PDF")
             if ! qpdf --version &>/dev/null; then
               if [ $isAndroid == true ]; then
