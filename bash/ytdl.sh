@@ -549,7 +549,7 @@ while true; do
       ;;
     Download) dl ;;
     Tools)
-      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio→Ringtone" "Images→Images" "Animations" "Documents" "Cipher")
+      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio→Audio" "Audio→Ringtone" "Images→Images" "Animations" "Documents" "Cipher")
       selected_tool=0
       while true; do
         menu tools bButtons "" "" $selected_tool && selected_tool=$selected || break
@@ -600,6 +600,45 @@ while true; do
                   if fileSelector $video_ext; then
                     read -r -p "StartTime: " -i "00:00" -e start_time
                     [ -n "$start_time" ] && Video2M4ARingtone "$filePath" "$start_time"
+                  fi
+                  ;;
+              esac
+            done
+            ;;
+          "Audio→Audio")
+            a2a=("M4A→MP3" "MP3→M4A")
+            selected_a2a=0
+            while true; do
+              menu a2a bButtons "" "" $selected_a2a && selected_a2a=$selected || break
+              case "${a2a[selected_a2a]}" in
+                "M4A→MP3") fileSelector m4a && M4A2MP3 "$filePath" ;;
+                "MP3→M4A") fileSelector mp3 && MP32M4A "$filePath" ;;
+              esac
+            done
+            ;;
+          "Audio→Ringtone")
+            a2r=("MP3→MP3Ringtone" "M4A→M4ARingtone" "M4A→MP3Ringtone" "MP3→M4ARingtone")
+            selected_a2r=0
+            while true; do
+              menu a2r bButtons "" "" $selected_a2r && selected_a2r=$selected || break
+              case "${a2r[selected_a2r]}" in
+                "MP3→MP3Ringtone"|"M4A→M4ARingtone")
+                  [ "${a2r[selected_a2r]}" == "MP3→MP3Ringtone" ] && audio_ext=mp3 || audio_ext=m4a
+                  if fileSelector $audio_ext; then
+                    read -r -p "StartTime: " -i "00:00" -e start_time
+                    [ -n "$start_time" ] && Audio2AudioRingtone "$filePath" "$start_time"
+                  fi
+                  ;;
+                "M4A→MP3Ringtone")
+                  if fileSelector m4a; then
+                    read -r -p "StartTime: " -i "00:00" -e start_time
+                    [ -n "$start_time" ] && M4A2MP3Ringtone "$filePath" "$start_time"
+                  fi
+                  ;;
+                "MP3→M4ARingtone")
+                  if fileSelector mp3; then
+                    read -r -p "StartTime: " -i "00:00" -e start_time
+                    [ -n "$start_time" ] && MP32M4ARingtone "$filePath" "$start_time"
                   fi
                   ;;
               esac

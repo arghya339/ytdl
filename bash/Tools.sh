@@ -53,3 +53,50 @@ Video2M4ARingtone() {
   ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -vn -c:a aac -b:a 192k "$Music/Ringtone/$fileNameWOExt.m4a"
   #mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
 }
+
+M4A2MP3() {
+  filePath=${1}
+  mkdir -p $Music/Convert
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -v quiet -i "$filePath" -c:a libmp3lame -q:a 0 -c:v copy "$Music/Convert/$fileNameWOExt.mp3"
+}
+
+MP32M4A() {
+  filePath=${1}
+  mkdir -p $Music/Convert
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -v quiet -i "$filePath" -c:a aac -b:a 192k -c:v copy -disposition:v:0 attached_pic "$Music/Convert/$fileNameWOExt.m4a"
+  #mv "$Music/Convert/$fileNameWOExt.m4a" "$Music/Convert/$fileNameWOExt.m4r"  # for iPhone
+}
+
+Audio2AudioRingtone() {
+  filePath=${1}
+  start_time=$2
+  mkdir -p $Music/Ringtone
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  file_ext=${fileName##*.}
+  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -c copy "$Music/Ringtone/$fileNameWOExt.$file_ext"
+  #[ "$file_ext" == "m4a" ] && mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
+}
+
+M4A2MP3Ringtone() {
+  filePath=${1}
+  start_time=$2
+  mkdir -p $Music/Ringtone
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -c:a libmp3lame -q:a 0 "$Music/Ringtone/$fileNameWOExt.mp3"
+}
+
+MP32M4ARingtone() {
+  filePath=${1}
+  start_time=$2
+  mkdir -p $Music/Ringtone
+  fileName=$(basename "$filePath")
+  fileNameWOExt=${fileName%.*}
+  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -c aac -b:a 192k "$Music/Ringtone/$fileNameWOExt.m4a"
+  #mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
+}
