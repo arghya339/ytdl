@@ -171,6 +171,7 @@ playlistNameAsAlbumMetadata() {
 
 audioFormatExtraction() {
   mapfile -t audioOnly < <(grep -E "audio only" <<< "$urlInfo")
+  #jq -r '[.formats | reverse | .[] | select(.resolution == "audio only")] | .[] | {format_id: .format_id, ext: .ext, audio_channels: .audio_channels, filesize_approx: (((.filesize_approx / 1024 / 1024) * 100 | round ) / 100), acodec: .acodec, abr: ((.abr * 100 | round ) / 100), asr: (.asr / 1000), language: .language, format_note: .format_note, url: .url}' <<< "$infoJson"
   audioFormatsList=(); AIDs=(); AEXTs=(); CHs=(); AFILESIZEs=(); ACODECs=(); ABRs=(); ASRs=(); LANGUAGEs=(); AQUALITYs=()
   for ((i=$((${#audioOnly[@]}-1)); i>=0; i--)); do
     #echo "$((${#audioOnly[@]}-i)). ${audioOnly[i]}"
@@ -215,6 +216,7 @@ URLData() {
     downloadOption="${downloadOptions[selected]}"
     if [ "$downloadOption" == "Video" ]; then
       mapfile -t videoOnly < <(grep -E "video only" <<< "$urlInfo")
+      #jq -r '(.duration) as $dur | [.formats | reverse | .[] | select(.resolution != "audio only" and .format_note != "storyboard")] | .[] | {format_id: .format_id, ext: .ext, resolution: .resolution, fps: .fps, filesize: ((((.filesize // ((.tbr * $dur * 1000) / 8)) / 1024 / 1024) * 100 | round ) / 100), vcodec: .vcodec, vbr: (((.vbr//.tbr) * 100 | round ) / 100), format_note: (.format_note // "\(.height)p"), url: .url}' <<< "$infoJson"
       formatsList=(); IDs=(); EXTs=(); RESOLUTIONs=(); FPSs=(); FILESIZEs=(); VCODECs=(); VBRs=(); QUALITYs=()
       for ((i=$((${#videoOnly[@]}-1)); i>=0; i--)); do
         #echo "$((${#videoOnly[@]}-i)). ${videoOnly[i]}"
@@ -253,6 +255,7 @@ URLData() {
       audioFormatExtraction
       [ -n "$audioFormatList" ] && { echo "Selected audio only: $audioFormatList"; format="$ABR"; } || format="bestaudio"
     else
+      #jq -r '.thumbnails[] | select(.resolution != null) | {id: .id, resolution: .resolution, url: .url}' <<< "$infoJson"
       format="images"
     fi
   fi
@@ -264,14 +267,34 @@ dl() {
     read -r -p "Type URL: " url  # https://youtu.be/__NeP0RqACU
     grep -qF "?feature=shared" <<< "$url" && url=$(echo "$url" | sed 's/\?feature=shared//')
     echo -e "\n$running Fetching URL metadata...\n"
-    if echo "$url 2>&1" | grep -qF "list"; then
-      total=$(yt-dlp --js-runtimes deno --remote-components ejs:github --flat-playlist --get-title "$url" 2>/dev/null | awk 'END{print NR}')
-      echo -e "$info The entered URL contain a playlist with a total of $total videos.\n"
+    infoJson=$(yt-dlp --js-runtimes deno --remote-components ejs:github -j "$url" -q --no-warnings)
+    playlist_id=$(jq -r '.playlist_id' <<< "$infoJson")
+    if [ $playlist_id != null ]; then
+      playlist_title=$(jq -r '.playlist_title' <<< "$infoJson")
+      playlist_uploader=$(jq -r '.playlist_uploader' <<< "$infoJson")
+      playlist_uploader_id=$(jq -r '.playlist_uploader_id' <<< "$infoJson")
+      playlist_count=$(jq -r '.playlist_count' <<< "$infoJson")
+      echo "playlist_title: $playlist_title\nplaylist_id: $playlist_id\nplaylist_uploader: $playlist_uploader\nplaylist_uploader_id: $playlist_uploader_id\nplaylist_count: $playlist_count"
+    fi
+    fulltitle=$(jq -r '.fulltitle' <<< "$infoJson")
+    channel=$(jq -r '.channel' <<< "$infoJson")
+    channel_is_verified=$(jq -r '.channel_is_verified' <<< "$infoJson")
+    channel_follower_count=$(jq -r '.channel_follower_count' <<< "$infoJson")
+    upload_date=$(jq -r '.upload_date' <<< "$infoJson")
+    uploader=$(jq -r '.uploader' <<< "$infoJson")
+    uploader_id=$(jq -r '.uploader_id' <<< "$infoJson")
+    availability=$(jq -r '.availability' <<< "$infoJson")
+    duration=$(jq -r '.duration' <<< "$infoJson")
+    like_count=$(jq -r '.like_count' <<< "$infoJson")
+    display_id=$(jq -r '.display_id' <<< "$infoJson")
+    dislikes=$(curl -sL "https://returnyoutubedislikeapi.com/votes?videoId=$display_id" | jq -r '.dislikes')
+    echo -e "fulltitle: $fulltitle\ndisplay_id: $display_id\nchannel: $channel\nchannel_is_verified: $channel_is_verified\nchannel_follower_count: $channel_follower_count\nupload_date: $upload_date\nuploader: $uploader\nuploader_id: $uploader_id\navailability: $availability\nduration: $duration\nlike_count: $like_count\ndislikes: $dislikes"
+    if grep -qF "list" <<< "$url" || [ $playlist_id != null ]; then
+      echo -e "$info The entered URL contain a playlist with a total of $playlist_count videos.\n"
       buttons=("<Entire>" "<Select>"); confirmPrompt "Download Entire playlist or Select videos?" "buttons" && choice="Entire" || choice="Select"
         if [ "$choice" == "Select" ]; then
             echo -e "\n\n$info List of Playlist items: \n\n"
-            # yt-dlp --js-runtimes deno --remote-components ejs:github --flat-playlist --get-title "$url" | nl -s ") " -w 2
-            yt-dlp --js-runtimes deno --remote-components ejs:github --flat-playlist --get-title "$url" 2> >(grep -v 'Incomplete data received\|Falling back on generic' >&2) | nl -s ") " -w 2
+            yt-dlp --js-runtimes deno --remote-components ejs:github --flat-playlist --get-title "$url" -q --no-warnings | nl -s ") " -w 2
             echo -e "\n\n$info Enter video numbers (e.g.: 1,3,5 or 2-5 or 1,4-6)"
             read -r -p "Select items: " playlist_items
             echo -e "$info List of Playlist videos with Format: \n\n"
