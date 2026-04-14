@@ -54,6 +54,14 @@ Video2M4ARingtone() {
   #mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
 }
 
+AudioP2Video() {
+  audioPath=${1}
+  videoPath=${2}
+  fileName=$(basename "$videoPath")
+  mkdir -p $Movies/Convert
+  ffmpeg -y -v quiet -i "$videoPath" -i "$audioPath" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest "$Movies/Convert/$fileName"
+}
+
 M4A2MP3() {
   filePath=${1}
   mkdir -p $Music/Convert
@@ -101,6 +109,23 @@ MP32M4ARingtone() {
   fileNameWOExt=${fileName%.*}
   ffmpeg -y -v quiet -ss $start_time -i "$filePath" -t 30 -c:a aac -b:a 192k -c:v copy "$Music/Ringtone/$fileNameWOExt.m4a"
   #mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
+}
+
+ImagesP2Audio() {
+  imagesPath=${1}
+  audioPath=${2}
+  fileName=$(basename "$audioPath")
+  images_ext=${imagesPath##*.}
+  audio_ext=${audioPath##*.}
+  mkdir -p $Pictures/ytdl/Convert $Music/ytdl/Convert
+  if [ "$audio_ext" == "m4a" ] && [ "$images_ext" == "jpg" ]; then
+    ffmpeg -y -v quiet -i "$imagesPath" "$Pictures/ytdl/Convert/temp.png"
+    imagesPath="$Pictures/ytdl/Convert/temp.png"
+  fi
+  ffmpeg -y -v quiet -i "$audioPath" -map 0:0 -c copy -vn "$Music/ytdl/Convert/temp_noart.$audio_ext"
+  ffmpeg -y -v quiet -i "$Music/ytdl/Convert/temp_noart.$audio_ext" -i "$imagesPath" -map 0:0 -map 1:0 -c:v copy "$Music/ytdl/Convert/$fileName"
+  ([ "$audio_ext" == "m4a" ] && [ "$images_ext" == "jpg" ]) && rm -f "$imagesPath"
+  rm -f "$Music/ytdl/Convert/temp_noart.$audio_ext"
 }
 
 Images2Images() {

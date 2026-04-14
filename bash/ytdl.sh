@@ -566,7 +566,7 @@ while true; do
       ;;
     Download) dl ;;
     Tools)
-      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio→Audio" "Audio→Ringtone" "Audio→Images" "Images→Images" "Animations" "PDF")
+      tools=("Video→Video" "Video→Audio" "Video→Ringtone" "Audio+→Video" "Audio→Audio" "Audio→Ringtone" "Audio→Images" "Images+→Audio" "Images→Images" "Animations" "PDF")
       selected_tool=0
       while true; do
         menu tools bButtons "" "" $selected_tool && selected_tool=$selected || break
@@ -622,6 +622,23 @@ while true; do
               esac
             done
             ;;
+          "Audio+→Video")
+            aP2v=("WEBM+→WEBM" "WEBM+→MP4" "M4A+→WEBM" "M4A+→MP4")
+            selected_aP2v=0
+            while true; do
+              menu aP2v bButtons "" "" $selected_aP2v && selected_aP2v=$selected || break
+              case "${aP2v[selected_aP2v]}" in
+                "WEBM+→WEBM") audio_ext=webm; video_ext=webm ;;
+                "WEBM+→MP4") audio_ext=webm; video_ext=mp4 ;;
+                "M4A+→WEBM") audio_ext=m4a; video_ext=webm ;;
+                "M4A+→MP4") audio_ext=m4a; video_ext=mp4 ;;
+              esac
+              if fileSelector $audio_ext; then
+                audioPath="$filePath"
+                fileSelector $video_ext && AudioP2Video "$audioPath" "$filePath"
+              fi
+            done
+            ;;
           "Audio→Audio")
             a2a=("M4A→MP3" "MP3→M4A")
             selected_a2a=0
@@ -672,6 +689,23 @@ while true; do
                 fileName=$(basename "$filePath")
                 fileNameWOExt=${fileName%.*}
                 ffmpeg -y -v quiet -i "$filePath" -map 0:v:0 -c copy "$Pictures/Convert/$fileNameWOExt.jpg"
+              fi
+            done
+            ;;
+          "Images+→Audio")
+            iP2a=("JPG+→MP3" "JPG+→M4A" "PNG+→MP3" "PNG+→M4A")
+            selected_iP2a=0
+            while true; do
+              menu iP2a bButtons "" "" $selected_iP2a && selected_iP2a=$selected || break
+              case "${iP2a[selected_iP2a]}" in
+                "JPG+→MP3") images_ext=jpg; audio_ext=mp3 ;;
+                "JPG+→M4A") images_ext=jpg; audio_ext=m4a ;;
+                "PNG+→MP3") images_ext=png; audio_ext=mp3 ;;
+                "PNG+→M4A") images_ext=png; audio_ext=m4a ;;
+              esac
+              if fileSelector $images_ext; then
+                imagesPath="$filePath"
+                fileSelector $audio_ext && "$imagesPath" "$filePath"
               fi
             done
             ;;
