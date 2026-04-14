@@ -67,7 +67,7 @@ MP32M4A() {
   mkdir -p $Music/Convert
   fileName=$(basename "$filePath")
   fileNameWOExt=${fileName%.*}
-  ffmpeg -y -v quiet -i "$filePath" -c:a aac -b:a 192k -c:v copy -disposition:v:0 attached_pic "$Music/Convert/$fileNameWOExt.m4a"
+  ffmpeg -y -v quiet -i "$filePath" -c:a aac -b:a 192k -c:v copy "$Music/Convert/$fileNameWOExt.m4a"
   #mv "$Music/Convert/$fileNameWOExt.m4a" "$Music/Convert/$fileNameWOExt.m4r"  # for iPhone
 }
 
@@ -78,7 +78,9 @@ Audio2AudioRingtone() {
   fileName=$(basename "$filePath")
   fileNameWOExt=${fileName%.*}
   file_ext=${fileName##*.}
-  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -c copy "$Music/Ringtone/$fileNameWOExt.$file_ext"
+  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -c copy "$Music/Ringtone/temp.$file_ext"
+  ffmpeg -y -v quiet -i "$Music/Ringtone/temp.$file_ext" -i "$filePath" -map 0:a -map 1:v -c:v copy "$Music/Ringtone/$fileNameWOExt.$file_ext"
+  rm -f "$Music/Ringtone/temp.$file_ext"
   #[ "$file_ext" == "m4a" ] && mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
 }
 
@@ -88,7 +90,7 @@ M4A2MP3Ringtone() {
   mkdir -p $Music/Ringtone
   fileName=$(basename "$filePath")
   fileNameWOExt=${fileName%.*}
-  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -c:a libmp3lame -q:a 0 "$Music/Ringtone/$fileNameWOExt.mp3"
+  ffmpeg -y -v quiet -ss $start_time -i "$filePath" -t 30 -c:a libmp3lame -q:a 0 -c:v copy "$Music/Ringtone/$fileNameWOExt.mp3"
 }
 
 MP32M4ARingtone() {
@@ -97,7 +99,7 @@ MP32M4ARingtone() {
   mkdir -p $Music/Ringtone
   fileName=$(basename "$filePath")
   fileNameWOExt=${fileName%.*}
-  ffmpeg -y -v quiet -i "$filePath" -ss $start_time -t 30 -c aac -b:a 192k "$Music/Ringtone/$fileNameWOExt.m4a"
+  ffmpeg -y -v quiet -ss $start_time -i "$filePath" -t 30 -c:a aac -b:a 192k -c:v copy "$Music/Ringtone/$fileNameWOExt.m4a"
   #mv "$Music/Ringtone/$fileNameWOExt.m4a" "$Music/Ringtone/$fileNameWOExt.m4r"  # for iPhone
 }
 
