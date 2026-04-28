@@ -314,7 +314,7 @@ dl() {
     case "$format" in
       [Bb][Ee][Ss][Tt][Vv][Ii][Dd][Ee][Oo])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -qE 'video'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           [ $? -ne 0 ] && { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP4!${Reset}"; }
           echo; read -p "Press Enter to continue..."
           break
@@ -324,11 +324,11 @@ dl() {
         ;;
       4320* | 8[Kk] | [Ff][Uu][Hh][Dd])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '4320p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height<=4320]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height<=4320]+bestaudio[ext=webm]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "${Yellow}Failed to download 4320p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -339,11 +339,11 @@ dl() {
         ;;
       2160* | 4[Kk] | [Uu][Hh][Dd])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '2160p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=2160]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=2160]+bestaudio[ext=webm]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download 2160p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -354,11 +354,11 @@ dl() {
         ;;
       1440* | 2[Kk] | [Qq][Hh][Dd])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '1440p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=1440]+bestaudio[ext=webm]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=1440]+bestaudio[ext=webm]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download 1440p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -369,11 +369,11 @@ dl() {
         ;;
       1080* | [Ff][Hh][Dd])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '1080p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=1080]+bestaudio[ext=m4a]' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=1080]+bestaudio[ext=m4a]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "${Yellow}Failed to download 1080p MKV! Falling back to default quality (bestvideo+bestaudio MKV).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -384,11 +384,11 @@ dl() {
         ;;
       720* | [Hh][Dd])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '720p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=720]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=720]+bestaudio[ext=m4a]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download 720p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -399,11 +399,11 @@ dl() {
         ;;
       480* | [Ss][Dd])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '480p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=480]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=480]+bestaudio[ext=m4a]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download 480p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -414,11 +414,11 @@ dl() {
         ;;
       360*)
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '360p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=360]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=360]+bestaudio[ext=m4a]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download 360p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -429,11 +429,11 @@ dl() {
         ;;
       240*)
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '240p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=240]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=240]+bestaudio[ext=m4a]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download 240p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -444,11 +444,11 @@ dl() {
         ;;
       144*)
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E '144p'; then
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=144]+bestaudio[ext=m4a]' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f 'bestvideo[height=144]+bestaudio[ext=m4a]' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download 144p MP4! Falling back to default quality (bestvideo+bestaudio MP4).${Reset}"
-            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+            yt-dlp --js-runtimes deno --remote-components ejs:github --force-overwrite -f 'bestvideo+bestaudio' $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mp4 --embed-thumbnail --add-metadata --write-subs --sub-lang all --sub-format srt --convert-subs srt --sponsorblock-mark sponsor "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           fi
           playlistNameAsAlbumMetadata
           echo; read -p "Press Enter to continue..."
@@ -460,10 +460,10 @@ dl() {
       [Bb][Ee][Ss][Tt][Aa][Uu][Dd][Ii][Oo])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -q -E 'Default'; then
           if grep -qE "/youtube.com|w.youtube.com|/youtu.be" <<< "$url"; then
-              yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --no-embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format srt --convert-subs srt --sponsorblock-remove music_offtopic "$url" -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+              yt-dlp --js-runtimes deno --remote-components ejs:github -x --ffmpeg-location $(dirname $(command -v ffmpeg)) --audio-format mp3 $items_args --no-embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format srt --convert-subs srt --sponsorblock-remove music_offtopic "$url" -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
               [ $? -eq 0 ] && crop_artwork || { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP3 from YouTube!${Reset}"; }
           else
-            yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format srt --convert-subs srt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt  # sponsorblock categories: sponsor, intro, outro, selfpromo, preview, filler, interaction, music_offtopic, hook, poi_highlight, chapter, all (default)
+            yt-dlp --js-runtimes deno --remote-components ejs:github -x --ffmpeg-location $(dirname $(command -v ffmpeg)) --audio-format mp3 $items_args --embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format srt --convert-subs srt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt  # sponsorblock categories: sponsor, intro, outro, selfpromo, preview, filler, interaction, music_offtopic, hook, poi_highlight, chapter, all (default)
             [ $? -ne 0 ] && { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP3 from YT Music!${Reset}"; }
           fi
           echo; read -p "Press Enter to continue..."
@@ -475,10 +475,10 @@ dl() {
       *[Kk])
         if yt-dlp --js-runtimes deno --remote-components ejs:github -F $url | grep -qE "$format"; then
           if grep -qE "/youtube.com|w.youtube.com|/youtu.be" <<< "$url"; then
-              yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --audio-quality ${format} --no-embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+              yt-dlp --js-runtimes deno --remote-components ejs:github -x --ffmpeg-location $(dirname $(command -v ffmpeg)) --audio-format mp3 $items_args --audio-quality ${format} --no-embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
               [ $? -eq 0 ] && crop_artwork || { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP3 from YouTube!${Reset}"; }
           elif grep -qE "/music.youtube.com" <<< "$url"; then
-            yt-dlp --js-runtimes deno --remote-components ejs:github -x --audio-format mp3 $items_args --audio-quality ${format} --embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt  # --sponsorblock-remove all  # Remove all sponsor segments
+            yt-dlp --js-runtimes deno --remote-components ejs:github -x --ffmpeg-location $(dirname $(command -v ffmpeg)) --audio-format mp3 $items_args --audio-quality ${format} --embed-thumbnail --add-metadata --write-subs --sub-lang "all,-live_chat" --sub-format vtt --sponsorblock-remove music_offtopic $url -o "$Music/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt  # --sponsorblock-remove all  # Remove all sponsor segments
             [ $? -ne 0 ] && { cat $ytdl/ytdlp_error_log.txt; echo -e "${Yellow}Failed to download MP3 from YT Music!${Reset}"; }
           fi
           echo; read -p "Press Enter to continue..."
@@ -488,7 +488,7 @@ dl() {
         fi
         ;;
       +([0-9])'+'+([0-9]) )
-          yt-dlp --js-runtimes deno --remote-components ejs:github -f "$format" $items_args --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github -f "$format" $items_args --ffmpeg-location $(dirname $(command -v ffmpeg)) --merge-output-format mkv --embed-thumbnail --add-metadata --write-info-json --write-subs --sub-lang all --sub-format vtt --sponsorblock-mark sponsor --external-downloader-args "aria2c: -x 16 -s 16 --console-log-level=error --download-result=hide --summary-interval=0" $cert "$url" -o "$Movies/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download Selected formate code $format in MKV!${Reset}"
@@ -499,11 +499,11 @@ dl() {
           fi
         ;;
       [Pp][Nn][Gg] | [Jj][Pp][Gg] | [Jj][Pp][Ee][Gg] | [Ww][Ee][Bb][Pp] | [Gg][Ii][Ff] | [Ii][Mm][Aa][Gg][Ee][Ss])
-        yt-dlp --js-runtimes deno --remote-components ejs:github --skip-download --write-thumbnail --convert-thumbnails png "$url" -o "$Pictures/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+        yt-dlp --js-runtimes deno --remote-components ejs:github --skip-download --write-thumbnail --ffmpeg-location $(dirname $(command -v ffmpeg)) --convert-thumbnails png "$url" -o "$Pictures/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
         if [ $? -ne 0 ]; then
           cat $ytdl/ytdlp_error_log.txt
           echo -e "$notice ${Yellow}Failed to download Images as PNG! Falling back to JPG format.${Reset}"
-          yt-dlp --js-runtimes deno --remote-components ejs:github --skip-download --write-thumbnail --convert-thumbnails jpg "$url" -o "$Pictures/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
+          yt-dlp --js-runtimes deno --remote-components ejs:github --skip-download --write-thumbnail --ffmpeg-location $(dirname $(command -v ffmpeg)) --convert-thumbnails jpg "$url" -o "$Pictures/%(title)s.%(ext)s" -q --progress 2> $ytdl/ytdlp_error_log.txt
           if [ $? -ne 0 ]; then
             cat $ytdl/ytdlp_error_log.txt
             echo -e "$notice ${Yellow}Failed to download Images as JPG! Falling back to default format (WEBP).${Reset}"
